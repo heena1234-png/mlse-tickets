@@ -360,9 +360,10 @@
   }
 
   // --- Step 2: Exchange Authorization Code for Access Token ---
+  // --- Step 2: Exchange Authorization Code for Access Token ---
   async function exchangeCodeForToken(code) {
-    const sfUrl = localStorage.getItem("sfUrl");
-    const clientId = localStorage.getItem("sfClientId");
+    const sfUrl = localStorage.getItem("sfUrl") || document.getElementById("cfgUrl").value.trim().replace(/\/$/, "");
+    const clientId = localStorage.getItem("sfClientId") || document.getElementById("cfgClientId").value.trim();
     const verifier = sessionStorage.getItem("pkce_verifier");
     const redirectUri = window.location.origin + window.location.pathname;
 
@@ -386,25 +387,31 @@
       const tokenData = await response.json();
 
       if (tokenData.access_token) {
+        // 1. Save valid token immediately
         sessionStorage.setItem("sfAccessToken", tokenData.access_token);
         sessionStorage.removeItem("pkce_verifier");
 
-        // Fetch User Identity Info
-        if (tokenData.id) {
-          const userResp = await fetch(tokenData.id, {
+        let fanName = "Fan Authenticated";
+
+        // 2. Fetch user identity via CORS-enabled userinfo endpoint instead of login.salesforce.com
+        try {
+          const userResp = await fetch(`${sfUrl}/services/oauth2/userinfo`, {
             headers: { "Authorization": `Bearer ${tokenData.access_token}` }
           });
-          const userData = await userResp.json();
-          sessionStorage.setItem("sfFanName", userData.display_name || userData.first_name);
-
-          // Pre-populate customer inputs
-          if (userData.first_name) document.getElementById("fanFirstName").value = userData.first_name;
-          if (userData.last_name) document.getElementById("fanLastName").value = userData.last_name;
-          if (userData.email) document.getElementById("fanEmail").value = userData.email;
-
-          updateSSOUI(userData.display_name || userData.first_name);
-          updateSummary();
+          if (userResp.ok) {
+            const userData = await userResp.json();
+            fanName = userData.name || userData.preferred_username || fanName;
+            if (userData.given_name) document.getElementById("fanFirstName").value = userData.given_name;
+            if (userData.family_name) document.getElementById("fanLastName").value = userData.family_name;
+            if (userData.email) document.getElementById("fanEmail").value = userData.email;
+          }
+        } catch (infoErr) {
+          console.warn("Could not query userinfo (non-blocking):", infoErr);
         }
+
+        sessionStorage.setItem("sfFanName", fanName);
+        updateSSOUI(fanName);
+        updateSummary();
       } else {
         alert("Authentication failed: " + (tokenData.error_description || JSON.stringify(tokenData)));
       }
