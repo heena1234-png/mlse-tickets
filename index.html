@@ -2,210 +2,346 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>MLSE Tickets | Connected App Gateway</title>
+  <title>MLSE Tickets | Official Matchday Portal</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
       --primary: #026cdf;
-      --primary-dark: #014ea6;
-      --bg-dark: #0b1329;
-      --surface: #ffffff;
-      --border: #cbd5e1;
+      --primary-hover: #0151a6;
+      --accent-red: #da291c;
+      --bg-midnight: #080d1a;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
       --text-main: #0f172a;
       --text-muted: #64748b;
       --error: #ef4444;
       --error-bg: #fee2e2;
       --success: #10b981;
-      --success-bg: #dcfce7;
+      --success-bg: #ecfdf5;
     }
 
-    * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-    body { background-color: var(--bg-dark); color: var(--text-main); margin: 0; padding: 28px 16px; }
-    .portal-wrapper { max-width: 1040px; margin: 0 auto; }
+    * { box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    body { background-color: var(--bg-midnight); color: var(--text-main); margin: 0; padding: 24px 16px; line-height: 1.5; }
+    .portal-container { max-width: 1100px; margin: 0 auto; }
 
-    .nav-bar { display: flex; justify-content: space-between; align-items: center; padding-bottom: 20px; color: #fff; }
-    .brand-logo { font-size: 20px; font-weight: 800; letter-spacing: 0.5px; display: flex; align-items: center; gap: 8px; }
-    .brand-logo span { color: #38bdf8; }
+    /* Brand Header Navigation */
+    .header-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 20px;
+      background: #000000;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+    }
+    .brand-container {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+    .brand-logo-img {
+      height: 38px;
+      width: auto;
+      object-fit: contain;
+      display: block;
+    }
+    .portal-badge {
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: rgba(255, 255, 255, 0.1);
+      color: #94a3b8;
+      padding: 4px 8px;
+      border-radius: 4px;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+    }
+    .config-trigger {
+      background: rgba(255,255,255,0.06);
+      border: 1px solid #334155;
+      color: #cbd5e1;
+      padding: 8px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+    .config-trigger:hover { color: #fff; border-color: #64748b; background: rgba(255,255,255,0.15); }
 
-    .config-trigger { background: rgba(255,255,255,0.06); border: 1px solid #334155; color: #94a3b8; padding: 7px 14px; border-radius: 6px; cursor: pointer; font-size: 12px; font-weight: 600; }
-    .config-trigger:hover { color: #fff; border-color: #64748b; background: rgba(255,255,255,0.12); }
-
+    /* Layout Grid */
     .checkout-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 24px; }
-    .card { background: var(--surface); border-radius: 12px; padding: 26px; box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+    @media (max-width: 860px) { .checkout-grid { grid-template-columns: 1fr; } }
 
-    .hero-banner { background: linear-gradient(135deg, #026cdf, #034694); color: white; border-radius: 8px; padding: 18px 20px; margin-bottom: 22px; }
-    .hero-banner h1 { margin: 0 0 4px 0; font-size: 19px; }
-    .hero-banner p { margin: 0; opacity: 0.9; font-size: 13px; }
+    .card { background: var(--card-bg); border-radius: 12px; padding: 28px; box-shadow: 0 12px 35px rgba(0,0,0,0.35); }
 
-    .section-title { font-size: 13px; font-weight: 700; color: var(--text-main); margin: 20px 0 12px 0; padding-bottom: 6px; border-bottom: 1px solid #e2e8f0; text-transform: uppercase; letter-spacing: 0.5px; }
+    .hero-banner {
+      background: linear-gradient(135deg, #0b152d, #14234b);
+      color: white;
+      border-radius: 10px;
+      padding: 20px 22px;
+      margin-bottom: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .hero-banner h1 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
+    .hero-banner p { margin: 0; color: #94a3b8; font-size: 13px; }
 
-    .form-group { margin-bottom: 14px; }
-    label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 5px; color: #334155; }
+    .section-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #475569;
+      margin: 22px 0 14px 0;
+      padding-bottom: 6px;
+      border-bottom: 1px solid #e2e8f0;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    /* Form Fields */
+    .form-group { margin-bottom: 15px; }
+    label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #334155; }
     .req { color: var(--error); font-weight: 700; }
 
-    input, select { width: 100%; padding: 10px 12px; border: 1.5px solid var(--border); border-radius: 6px; font-size: 14px; background: #fff; transition: border-color 0.2s; }
-    input:focus, select:focus { outline: none; border-color: var(--primary); }
-    input.input-error, select.input-error { border-color: var(--error) !important; background-color: #fffbfa; }
-    .error-text { font-size: 11px; color: var(--error); margin-top: 4px; display: none; font-weight: 500; }
+    input, select {
+      width: 100%;
+      padding: 11px 13px;
+      border: 1.5px solid var(--card-border);
+      border-radius: 8px;
+      font-size: 14px;
+      background: #fff;
+      color: var(--text-main);
+      transition: all 0.2s;
+    }
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(2, 108, 223, 0.15);
+    }
+    input.input-error, select.input-error { border-color: var(--error) !important; background-color: #fff9f9; }
+    .error-text { font-size: 11px; color: var(--error); margin-top: 4px; display: none; font-weight: 600; }
 
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
+    /* Interactive Package Cards */
     .package-container { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
-    .package-card { border: 2px solid var(--border); border-radius: 8px; padding: 14px; cursor: pointer; transition: all 0.2s; background: #fafafa; }
+    .package-card {
+      border: 2px solid var(--card-border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      cursor: pointer;
+      transition: all 0.2s;
+      background: #fafafa;
+    }
     .package-card:hover { border-color: var(--primary); background: #f8fafc; }
     .package-card.selected { border-color: var(--primary); background-color: #eff6ff; }
     
     .pkg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
     .pkg-name { font-weight: 700; font-size: 14px; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
-    .pkg-radio { width: 16px; height: 16px; accent-color: var(--primary); }
+    .pkg-radio { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
     .pkg-price { font-weight: 800; font-size: 16px; color: var(--primary); }
     .pkg-desc { font-size: 12px; color: var(--text-muted); margin-left: 24px; }
-    .pkg-tier-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
+    .pkg-tier-tag {
+      font-size: 10px;
+      font-weight: 700;
+      text-transform: uppercase;
+      background: #dbeafe;
+      color: #1e40af;
+      padding: 2px 7px;
+      border-radius: 4px;
+      margin-left: 6px;
+    }
 
-    .summary-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 18px 0; }
-    .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--text-muted); }
-    .summary-row.total { border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 10px; font-size: 18px; font-weight: 800; color: var(--text-main); }
+    /* Live Summary Box */
+    .summary-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 20px 0; }
+    .summary-row { display: flex; justify-content: space-between; margin-bottom: 9px; font-size: 13px; color: var(--text-muted); }
+    .summary-row.total {
+      border-top: 1px dashed var(--card-border);
+      padding-top: 12px;
+      margin-top: 12px;
+      font-size: 19px;
+      font-weight: 800;
+      color: var(--text-main);
+    }
 
-    .checkout-btn { width: 100%; background: var(--primary); color: white; border: none; padding: 14px; border-radius: 8px; font-size: 16px; font-weight: 700; cursor: pointer; transition: background 0.2s; }
-    .checkout-btn:hover { background: var(--primary-dark); }
+    /* Action Button */
+    .checkout-btn {
+      width: 100%;
+      background: var(--primary);
+      color: white;
+      border: none;
+      padding: 15px;
+      border-radius: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .checkout-btn:hover { background: var(--primary-hover); }
     .checkout-btn:disabled { background: #94a3b8; cursor: not-allowed; }
 
-    .alert { margin-top: 16px; padding: 14px; border-radius: 8px; font-size: 13px; display: none; line-height: 1.5; }
+    /* Status Notifications */
+    .alert { margin-top: 16px; padding: 16px; border-radius: 8px; font-size: 13px; display: none; line-height: 1.6; }
     .alert-success { background: var(--success-bg); color: #065f46; border: 1px solid #6ee7b7; }
     .alert-error { background: var(--error-bg); color: #991b1b; border: 1px solid #fca5a5; }
 
-    #adminModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(2px); }
-    .modal-box { background: white; border-radius: 12px; padding: 24px; max-width: 480px; width: 90%; }
+    /* Modal Backdrop */
+    #adminModal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.75);
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      backdrop-filter: blur(3px);
+    }
+    .modal-box { background: white; border-radius: 12px; padding: 26px; max-width: 480px; width: 90%; }
   </style>
 </head>
 <body>
 
-<div class="portal-wrapper">
-  <div class="nav-bar">
-    <div class="brand-logo">MLSE <span>TICKETS</span></div>
-    <div class="nav-actions">
-      <button class="config-trigger" onclick="openSettings()">⚙️ Connected App Config</button>
+<div class="portal-container">
+  <!-- Brand Header Navigation -->
+  <header class="header-nav">
+    <div class="brand-container">
+      <!-- Upload mlse-logo.png to your repo or reference it here -->
+      <img src="mlse-logo.png" alt="Rogers x MLSE Logo" class="brand-logo-img">
+      <span class="portal-badge">Tickets & Loyalty</span>
     </div>
-  </div>
+    <div class="nav-actions">
+      <button type="button" class="config-trigger" onclick="openSettings()">⚙️ Connected App Config</button>
+    </div>
+  </header>
 
-  <div class="checkout-grid">
-    <div class="card">
-      <div class="hero-banner">
-        <h1>Matchday Ticket Gateway</h1>
-        <p>Purchases automatically register to Salesforce via Connected App integration.</p>
-      </div>
-
-      <div class="section-title" style="margin-top: 0;">1. Fan Information</div>
-
-      <div class="row-2">
-        <div class="form-group">
-          <label>First Name <span class="req">*</span></label>
-          <input type="text" id="fanFirstName" autocomplete="off" oninput="validateMandatory(this)">
-          <div class="error-text" id="err-fanFirstName">First name is required.</div>
+  <!-- Guest Checkout Form -->
+  <form id="orderForm" autocomplete="off" onsubmit="return false;">
+    <div class="checkout-grid">
+      <!-- Left Column: Customer & Ticket Details -->
+      <div class="card">
+        <div class="hero-banner">
+          <h1>Official Fan Matchday Gateway</h1>
+          <p>Select your team package. Orders automatically sync with your MLSE Loyalty profile.</p>
         </div>
-        <div class="form-group">
-          <label>Last Name <span class="req">*</span></label>
-          <input type="text" id="fanLastName" autocomplete="off" oninput="validateMandatory(this)">
-          <div class="error-text" id="err-fanLastName">Last name is required.</div>
-        </div>
-      </div>
 
-      <div class="form-group">
-        <label>Email Address <span class="req">*</span></label>
-        <input type="email" id="fanEmail" autocomplete="off" oninput="validateMandatory(this)">
-        <div class="error-text" id="err-fanEmail">A valid email address is required.</div>
-      </div>
+        <div class="section-title" style="margin-top: 0;">1. Fan Information</div>
 
-      <div class="section-title">2. Franchise Brand & Package</div>
-
-      <div class="form-group">
-        <label>Franchise Brand <span class="req">*</span></label>
-        <select id="brandSelect" onchange="validateMandatory(this); renderPackageCards();">
-          <option value="" disabled selected>-- Select Franchise Brand --</option>
-          <option value="Toronto Maple Leafs">Toronto Maple Leafs (NHL)</option>
-          <option value="Toronto Raptors">Toronto Raptors (NBA)</option>
-          <option value="Toronto FC">Toronto FC (MLS)</option>
-          <option value="Toronto Argonauts">Toronto Argonauts (CFL)</option>
-          <option value="Live">Live (Concerts & Shows)</option>
-        </select>
-        <div class="error-text" id="err-brandSelect">Please select a franchise brand.</div>
-      </div>
-
-      <div class="form-group">
-        <label>Select Ticket Tier Package <span class="req">*</span></label>
-        <div id="packageContainer" class="package-container">
-          <div style="font-size: 13px; color: #94a3b8; padding: 12px; border: 1.5px dashed #cbd5e1; border-radius: 8px; text-align: center;">
-            Please choose a Franchise Brand above to view packages.
+        <div class="row-2">
+          <div class="form-group">
+            <label>First Name <span class="req">*</span></label>
+            <input type="text" id="fanFirstName" name="nofill_first" autocomplete="new-password" oninput="validateMandatory(this)">
+            <div class="error-text" id="err-fanFirstName">First name is required.</div>
+          </div>
+          <div class="form-group">
+            <label>Last Name <span class="req">*</span></label>
+            <input type="text" id="fanLastName" name="nofill_last" autocomplete="new-password" oninput="validateMandatory(this)">
+            <div class="error-text" id="err-fanLastName">Last name is required.</div>
           </div>
         </div>
-        <div class="error-text" id="err-package">Please select a ticket package.</div>
+
+        <div class="form-group">
+          <label>Email Address <span class="req">*</span></label>
+          <input type="text" inputmode="email" id="fanEmail" name="nofill_email_address" autocomplete="new-password" oninput="validateMandatory(this)">
+          <div class="error-text" id="err-fanEmail">A valid email address is required.</div>
+        </div>
+
+        <div class="section-title">2. Franchise Brand & Package</div>
+
+        <div class="form-group">
+          <label>Franchise Brand <span class="req">*</span></label>
+          <select id="brandSelect" onchange="validateMandatory(this); renderPackageCards();">
+            <option value="" disabled selected>-- Select Franchise Brand --</option>
+            <option value="Toronto Maple Leafs">Toronto Maple Leafs (NHL)</option>
+            <option value="Toronto Raptors">Toronto Raptors (NBA)</option>
+            <option value="Toronto FC">Toronto FC (MLS)</option>
+            <option value="Toronto Argonauts">Toronto Argonauts (CFL)</option>
+            <option value="Live">Live (Concerts & Shows)</option>
+          </select>
+          <div class="error-text" id="err-brandSelect">Please select a franchise brand.</div>
+        </div>
+
+        <div class="form-group">
+          <label>Select Ticket Tier Package <span class="req">*</span></label>
+          <div id="packageContainer" class="package-container">
+            <div style="font-size: 13px; color: #94a3b8; padding: 14px; border: 1.5px dashed #cbd5e1; border-radius: 8px; text-align: center;">
+              Please select a Franchise Brand above to view available packages.
+            </div>
+          </div>
+          <div class="error-text" id="err-package">Please select a ticket package.</div>
+        </div>
+      </div>
+
+      <!-- Right Column: Payment & Order Summary -->
+      <div class="card">
+        <div class="section-title" style="margin-top: 0;">3. Payment Details</div>
+
+        <div class="form-group">
+          <label>Payment Method</label>
+          <select id="payMethodSelect">
+            <option value="Visa Credit Card">Visa Credit Card</option>
+            <option value="Mastercard Credit Card">Mastercard Credit Card</option>
+            <option value="American Express">American Express</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Card Number <span class="req">*</span></label>
+          <input type="text" id="cardNumber" name="nofill_card_num" autocomplete="new-password" oninput="validateMandatory(this)">
+          <div class="error-text" id="err-cardNumber">Card number is required.</div>
+        </div>
+
+        <div class="row-2">
+          <div class="form-group">
+            <label>Expiry (MM/YY)</label>
+            <input type="text" id="cardExpiry" name="nofill_exp_date" autocomplete="new-password">
+          </div>
+          <div class="form-group">
+            <label>CVV / CID</label>
+            <input type="text" id="cardCvv" name="nofill_security_code" autocomplete="new-password">
+          </div>
+        </div>
+
+        <!-- Order Summary Card -->
+        <div class="summary-card">
+          <div class="summary-row">
+            <span>Customer:</span>
+            <span id="sumCustomer" style="font-weight: 600;">--</span>
+          </div>
+          <div class="summary-row">
+            <span>Franchise Brand:</span>
+            <span id="sumBrand" style="font-weight: 600;">--</span>
+          </div>
+          <div class="summary-row">
+            <span>Ticket Package:</span>
+            <span id="sumType" style="font-weight: 600;">--</span>
+          </div>
+          <div class="summary-row">
+            <span>Target Flow Tier:</span>
+            <span id="sumTier" style="font-weight: 600;">--</span>
+          </div>
+          <div class="summary-row total">
+            <span>Total:</span>
+            <span id="sumAmount">$0.00 CAD</span>
+          </div>
+        </div>
+
+        <button type="button" class="checkout-btn" id="payBtn" onclick="processTicketIngestion()">Complete Order & Buy Tickets</button>
+
+        <div id="statusAlert" class="alert"></div>
       </div>
     </div>
-
-    <div class="card">
-      <div class="section-title" style="margin-top: 0;">3. Payment Details</div>
-
-      <div class="form-group">
-        <label>Payment Method</label>
-        <select id="payMethodSelect">
-          <option value="Visa Credit Card">Visa Credit Card</option>
-          <option value="Mastercard Credit Card">Mastercard Credit Card</option>
-          <option value="American Express">American Express</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label>Card Number <span class="req">*</span></label>
-        <input type="text" id="cardNumber" autocomplete="off" oninput="validateMandatory(this)">
-        <div class="error-text" id="err-cardNumber">Card number is required.</div>
-      </div>
-
-      <div class="row-2">
-        <div class="form-group">
-          <label>Expiry (MM/YY)</label>
-          <input type="text" id="cardExpiry" autocomplete="off">
-        </div>
-        <div class="form-group">
-          <label>CVV / CID</label>
-          <input type="text" id="cardCvv" autocomplete="off">
-        </div>
-      </div>
-
-      <div class="summary-card">
-        <div class="summary-row">
-          <span>Customer:</span>
-          <span id="sumCustomer" style="font-weight: 600;">--</span>
-        </div>
-        <div class="summary-row">
-          <span>Franchise Brand:</span>
-          <span id="sumBrand" style="font-weight: 600;">--</span>
-        </div>
-        <div class="summary-row">
-          <span>Ticket Package:</span>
-          <span id="sumType" style="font-weight: 600;">--</span>
-        </div>
-        <div class="summary-row">
-          <span>Target Flow Tier:</span>
-          <span id="sumTier" style="font-weight: 600;">--</span>
-        </div>
-        <div class="summary-row total">
-          <span>Total:</span>
-          <span id="sumAmount">$0.00 CAD</span>
-        </div>
-      </div>
-
-      <button class="checkout-btn" id="payBtn" onclick="processTicketIngestion()">Complete Order & Buy Tickets</button>
-
-      <div id="statusAlert" class="alert"></div>
-    </div>
-  </div>
+  </form>
 </div>
 
-<!-- Modal for Connected App Credentials -->
+<!-- Modal for Connected App Configuration -->
 <div id="adminModal">
   <div class="modal-box">
     <h3 style="margin-top: 0; font-size: 18px;">⚙️ Connected App Configuration</h3>
-    <p style="font-size: 13px; color: #64748b;">Enter your Salesforce Connected App credentials for direct OAuth token generation.</p>
+    <p style="font-size: 13px; color: #64748b;">Credentials used for direct background OAuth token generation.</p>
 
     <div class="form-group">
       <label>Salesforce Instance URL <span class="req">*</span></label>
@@ -263,12 +399,15 @@
   let selectedTargetTier = null;
 
   window.onload = function() {
-    // Retain configuration settings
     document.getElementById("cfgUrl").value = localStorage.getItem("sfUrl") || "https://accenture307.my.salesforce.com";
     if (localStorage.getItem("sfClientId")) document.getElementById("cfgClientId").value = localStorage.getItem("sfClientId");
     if (localStorage.getItem("sfClientSecret")) document.getElementById("cfgClientSecret").value = localStorage.getItem("sfClientSecret");
 
-    // Explicitly enforce that all user-facing inputs start blank on reload
+    resetAllFields();
+  };
+
+  function resetAllFields() {
+    document.getElementById("orderForm").reset();
     document.getElementById("fanFirstName").value = "";
     document.getElementById("fanLastName").value = "";
     document.getElementById("fanEmail").value = "";
@@ -277,8 +416,21 @@
     document.getElementById("cardCvv").value = "";
     document.getElementById("brandSelect").selectedIndex = 0;
 
+    selectedTicketType = null;
+    selectedTicketPrice = 0.0;
+    selectedTargetTier = null;
+
+    document.getElementById("packageContainer").innerHTML = `
+      <div style="font-size: 13px; color: #94a3b8; padding: 14px; border: 1.5px dashed #cbd5e1; border-radius: 8px; text-align: center;">
+        Please select a Franchise Brand above to view available packages.
+      </div>
+    `;
+
+    document.querySelectorAll(".input-error").forEach(el => el.classList.remove("input-error"));
+    document.querySelectorAll(".error-text").forEach(el => el.style.display = "none");
+
     updateSummary();
-  };
+  }
 
   function openSettings() { document.getElementById("adminModal").style.display = "flex"; }
   function closeSettings() { document.getElementById("adminModal").style.display = "none"; }
@@ -292,7 +444,6 @@
     alert("Connected App settings saved!");
   }
 
-  // --- Automatic Connected App Token Retrieval ---
   async function getConnectedAppToken(sfUrl, clientId, clientSecret) {
     if (sessionStorage.getItem("cachedToken")) {
       return sessionStorage.getItem("cachedToken");
@@ -429,30 +580,33 @@
 
     if (!isFirstValid || !isLastValid || !isEmailValid || !isBrandValid || !isPkgValid || !isCardValid) {
       alertBox.className = "alert alert-error";
-      alertBox.innerHTML = "⚠️️ Please complete all required customer details and choose a ticket package.";
+      alertBox.innerHTML = "⚠️ Please complete all required customer details and choose a ticket package.";
       alertBox.style.display = "block";
       return;
     }
 
     const btn = document.getElementById("payBtn");
     btn.disabled = true;
-    btn.innerText = "Authenticating & Ingesting...";
+    btn.innerText = "Transmitting to Salesforce...";
+
+    const firstName = document.getElementById("fanFirstName").value.trim();
+    const lastName = document.getElementById("fanLastName").value.trim();
+    const email = document.getElementById("fanEmail").value.trim();
+    const brand = document.getElementById("brandSelect").value;
+    const ticketTypeSnapshot = selectedTicketType;
+    const priceSnapshot = selectedTicketPrice;
+    const tierSnapshot = selectedTargetTier;
 
     try {
       const authToken = await getConnectedAppToken(sfUrl, clientId, clientSecret);
-
-      const firstName = document.getElementById("fanFirstName").value.trim();
-      const lastName = document.getElementById("fanLastName").value.trim();
-      const email = document.getElementById("fanEmail").value.trim();
-      const brand = document.getElementById("brandSelect").value;
 
       const payload = {
         "firstName": firstName,
         "lastName": lastName,
         "email": email,
         "brand": brand,
-        "ticketType": selectedTicketType,
-        "amount": selectedTicketPrice
+        "ticketType": ticketTypeSnapshot,
+        "amount": priceSnapshot
       };
 
       const response = await fetch(`${sfUrl}/services/apexrest/FanCheckout`, {
@@ -473,18 +627,11 @@
           • <strong>Loyalty Member ID:</strong> <code>${res.memberId}</code><br>
           • <strong>Ticket Record ID:</strong> <code>${res.ticketId}</code><br>
           • <strong>Franchise Brand:</strong> ${brand}<br>
-          • <strong>Package:</strong> ${selectedTicketType} ($${selectedTicketPrice.toLocaleString("en-US", {minimumFractionDigits: 2})} CAD)<br>
-          • <strong>Loyalty Tier:</strong> Promoted to <strong>${selectedTargetTier}</strong>!`;
+          • <strong>Package:</strong> ${ticketTypeSnapshot} ($${priceSnapshot.toLocaleString("en-US", {minimumFractionDigits: 2})} CAD)<br>
+          • <strong>Loyalty Tier:</strong> Promoted to <strong>${tierSnapshot}</strong>!`;
         alertBox.style.display = "block";
 
-        // Reset input fields to completely blank after order completion
-        document.getElementById("fanFirstName").value = "";
-        document.getElementById("fanLastName").value = "";
-        document.getElementById("fanEmail").value = "";
-        document.getElementById("cardNumber").value = "";
-        document.getElementById("cardExpiry").value = "";
-        document.getElementById("cardCvv").value = "";
-        updateSummary();
+        resetAllFields();
       } else {
         throw new Error(res.message || (res[0] ? res[0].message : JSON.stringify(res)));
       }
