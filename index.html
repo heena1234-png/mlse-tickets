@@ -9,35 +9,35 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #026cdf;
-      --primary-hover: #0151a6;
-      --accent-red: #da291c;
-      --bg-midnight: #080d1a;
-      --card-bg: #ffffff;
-      --card-border: #e2e8f0;
-      --text-main: #0f172a;
-      --text-muted: #64748b;
+      --primary: #da291c;            /* Rogers / Raptors Crimson Red */
+      --primary-hover: #b81d12;
+      --bg-main: #0a0a0c;             /* Deep Onyx Black */
+      --card-bg: #141418;             /* Rich Dark Charcoal */
+      --card-border: #27272f;
+      --input-bg: #1b1b22;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
       --error: #ef4444;
-      --error-bg: #fee2e2;
+      --error-bg: #451010;
       --success: #10b981;
-      --success-bg: #ecfdf5;
+      --success-bg: #064e3b;
     }
 
     * { box-sizing: border-box; font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
-    body { background-color: var(--bg-midnight); color: var(--text-main); margin: 0; padding: 24px 16px; line-height: 1.5; }
+    body { background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 24px 16px; line-height: 1.5; }
     .portal-container { max-width: 1100px; margin: 0 auto; }
 
-    /* Brand Header Navigation */
+    /* Header Nav */
     .header-nav {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 20px;
+      padding: 14px 22px;
       background: #000000;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid var(--card-border);
       border-radius: 12px;
       margin-bottom: 24px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+      box-shadow: 0 4px 25px rgba(0,0,0,0.7);
     }
     .brand-container {
       display: flex;
@@ -45,25 +45,41 @@
       gap: 16px;
     }
     .brand-logo-img {
-      height: 38px;
+      height: 34px;
       width: auto;
       object-fit: contain;
       display: block;
+    }
+    /* Fallback stylized text logo if image is loading or 404 */
+    .brand-text-fallback {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 20px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #fff;
+    }
+    .brand-text-fallback .rogers-tag {
+      color: var(--primary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
     }
     .portal-badge {
       font-size: 11px;
       font-weight: 700;
       letter-spacing: 1px;
       text-transform: uppercase;
-      background: rgba(255, 255, 255, 0.1);
-      color: #94a3b8;
+      background: rgba(218, 41, 28, 0.15);
+      color: #ff8078;
       padding: 4px 8px;
       border-radius: 4px;
-      border: 1px solid rgba(255, 255, 255, 0.15);
+      border: 1px solid rgba(218, 41, 28, 0.3);
     }
     .config-trigger {
-      background: rgba(255,255,255,0.06);
-      border: 1px solid #334155;
+      background: #1b1b22;
+      border: 1px solid #33333d;
       color: #cbd5e1;
       padding: 8px 14px;
       border-radius: 6px;
@@ -72,103 +88,119 @@
       font-weight: 600;
       transition: all 0.2s;
     }
-    .config-trigger:hover { color: #fff; border-color: #64748b; background: rgba(255,255,255,0.15); }
+    .config-trigger:hover { color: #fff; border-color: var(--primary); background: #24242e; }
 
     /* Layout Grid */
     .checkout-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 24px; }
     @media (max-width: 860px) { .checkout-grid { grid-template-columns: 1fr; } }
 
-    .card { background: var(--card-bg); border-radius: 12px; padding: 28px; box-shadow: 0 12px 35px rgba(0,0,0,0.35); }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 28px;
+      box-shadow: 0 12px 35px rgba(0,0,0,0.5);
+    }
 
     .hero-banner {
-      background: linear-gradient(135deg, #0b152d, #14234b);
+      background: linear-gradient(135deg, #180505 0%, #290808 50%, #000000 100%);
+      border-left: 4px solid var(--primary);
       color: white;
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 20px 22px;
       margin-bottom: 24px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-top: 1px solid rgba(255,255,255,0.05);
+      border-right: 1px solid rgba(255,255,255,0.05);
+      border-bottom: 1px solid rgba(255,255,255,0.05);
     }
-    .hero-banner h1 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; }
-    .hero-banner p { margin: 0; color: #94a3b8; font-size: 13px; }
+    .hero-banner h1 { margin: 0 0 6px 0; font-size: 20px; font-weight: 700; letter-spacing: -0.3px; color: #fff; }
+    .hero-banner p { margin: 0; color: #cbd5e1; font-size: 13px; }
 
     .section-title {
       font-size: 12px;
       font-weight: 800;
-      color: #475569;
+      color: #cbd5e1;
       margin: 22px 0 14px 0;
       padding-bottom: 6px;
-      border-bottom: 1px solid #e2e8f0;
+      border-bottom: 1px solid var(--card-border);
       text-transform: uppercase;
       letter-spacing: 0.8px;
     }
 
     /* Form Fields */
-    .form-group { margin-bottom: 15px; }
-    label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #334155; }
-    .req { color: var(--error); font-weight: 700; }
+    .form-group { margin-bottom: 16px; }
+    label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #cbd5e1; }
+    .req { color: var(--primary); font-weight: 700; }
 
     input, select {
       width: 100%;
-      padding: 11px 13px;
+      padding: 12px 14px;
       border: 1.5px solid var(--card-border);
       border-radius: 8px;
       font-size: 14px;
-      background: #fff;
-      color: var(--text-main);
+      background: var(--input-bg);
+      color: #ffffff;
       transition: all 0.2s;
     }
     input:focus, select:focus {
       outline: none;
       border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(2, 108, 223, 0.15);
+      box-shadow: 0 0 0 3px rgba(218, 41, 28, 0.25);
     }
-    input.input-error, select.input-error { border-color: var(--error) !important; background-color: #fff9f9; }
-    .error-text { font-size: 11px; color: var(--error); margin-top: 4px; display: none; font-weight: 600; }
+    input.input-error, select.input-error { border-color: var(--error) !important; background-color: #241111; }
+    .error-text { font-size: 11px; color: #f87171; margin-top: 4px; display: none; font-weight: 600; }
 
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
     /* Interactive Package Cards */
     .package-container { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
     .package-card {
-      border: 2px solid var(--card-border);
+      border: 1.5px solid var(--card-border);
       border-radius: 8px;
       padding: 14px 16px;
       cursor: pointer;
       transition: all 0.2s;
-      background: #fafafa;
+      background: #101014;
     }
-    .package-card:hover { border-color: var(--primary); background: #f8fafc; }
-    .package-card.selected { border-color: var(--primary); background-color: #eff6ff; }
+    .package-card:hover { border-color: #4b4b58; background: #16161c; }
+    .package-card.selected { border-color: var(--primary); background-color: #220b0b; }
     
     .pkg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .pkg-name { font-weight: 700; font-size: 14px; color: var(--text-main); display: flex; align-items: center; gap: 8px; }
+    .pkg-name { font-weight: 700; font-size: 14px; color: #ffffff; display: flex; align-items: center; gap: 8px; }
     .pkg-radio { width: 16px; height: 16px; accent-color: var(--primary); cursor: pointer; }
-    .pkg-price { font-weight: 800; font-size: 16px; color: var(--primary); }
+    .pkg-price { font-weight: 800; font-size: 16px; color: #ffffff; }
     .pkg-desc { font-size: 12px; color: var(--text-muted); margin-left: 24px; }
     .pkg-tier-tag {
       font-size: 10px;
       font-weight: 700;
       text-transform: uppercase;
-      background: #dbeafe;
-      color: #1e40af;
+      background: #3b0d0c;
+      color: #ff9994;
       padding: 2px 7px;
       border-radius: 4px;
       margin-left: 6px;
+      border: 1px solid rgba(218, 41, 28, 0.4);
     }
 
-    /* Live Summary Box */
-    .summary-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 18px; margin: 20px 0; }
+    /* Summary Card */
+    .summary-card {
+      background: #0d0d10;
+      border: 1px solid var(--card-border);
+      border-radius: 8px;
+      padding: 18px;
+      margin: 20px 0;
+    }
     .summary-row { display: flex; justify-content: space-between; margin-bottom: 9px; font-size: 13px; color: var(--text-muted); }
     .summary-row.total {
-      border-top: 1px dashed var(--card-border);
+      border-top: 1px dashed #33333d;
       padding-top: 12px;
       margin-top: 12px;
       font-size: 19px;
       font-weight: 800;
-      color: var(--text-main);
+      color: #ffffff;
     }
 
-    /* Action Button */
+    /* Checkout Button */
     .checkout-btn {
       width: 100%;
       background: var(--primary);
@@ -182,25 +214,33 @@
       transition: background 0.2s;
     }
     .checkout-btn:hover { background: var(--primary-hover); }
-    .checkout-btn:disabled { background: #94a3b8; cursor: not-allowed; }
+    .checkout-btn:disabled { background: #441818; color: #888; cursor: not-allowed; }
 
-    /* Status Notifications */
+    /* Alert Banners */
     .alert { margin-top: 16px; padding: 16px; border-radius: 8px; font-size: 13px; display: none; line-height: 1.6; }
-    .alert-success { background: var(--success-bg); color: #065f46; border: 1px solid #6ee7b7; }
-    .alert-error { background: var(--error-bg); color: #991b1b; border: 1px solid #fca5a5; }
+    .alert-success { background: var(--success-bg); color: #6ee7b7; border: 1px solid #059669; }
+    .alert-error { background: var(--error-bg); color: #fca5a5; border: 1px solid #dc2626; }
 
     /* Modal Backdrop */
     #adminModal {
       display: none;
       position: fixed;
       top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.75);
+      background: rgba(0,0,0,0.85);
       align-items: center;
       justify-content: center;
       z-index: 100;
-      backdrop-filter: blur(3px);
+      backdrop-filter: blur(4px);
     }
-    .modal-box { background: white; border-radius: 12px; padding: 26px; max-width: 480px; width: 90%; }
+    .modal-box {
+      background: #141418;
+      border: 1px solid var(--card-border);
+      color: #fff;
+      border-radius: 12px;
+      padding: 26px;
+      max-width: 480px;
+      width: 90%;
+    }
   </style>
 </head>
 <body>
@@ -209,8 +249,11 @@
   <!-- Brand Header Navigation -->
   <header class="header-nav">
     <div class="brand-container">
-      <!-- Upload mlse-logo.png to your repo or reference it here -->
-      <img src="mlse-logo.png" alt="Rogers x MLSE Logo" class="brand-logo-img">
+      <!-- Tries to load uploaded mlse-logo.png; if missing, falls back cleanly -->
+      <img src="mlse-logo.png" alt="Rogers x MLSE Logo" class="brand-logo-img" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex';">
+      <div id="logoFallback" class="brand-text-fallback" style="display: none;">
+        <span class="rogers-tag">🔴 ROGERS</span> <span>× MLSE</span>
+      </div>
       <span class="portal-badge">Tickets & Loyalty</span>
     </div>
     <div class="nav-actions">
@@ -221,11 +264,11 @@
   <!-- Guest Checkout Form -->
   <form id="orderForm" autocomplete="off" onsubmit="return false;">
     <div class="checkout-grid">
-      <!-- Left Column: Customer & Ticket Details -->
+      <!-- Left Column: Customer & Matchday Details -->
       <div class="card">
         <div class="hero-banner">
-          <h1>Official Fan Matchday Gateway</h1>
-          <p>Select your team package. Orders automatically sync with your MLSE Loyalty profile.</p>
+          <h1>Matchday Ticket Gateway</h1>
+          <p>Direct ticket issue and automatic MLSE Loyalty Program tier progression.</p>
         </div>
 
         <div class="section-title" style="margin-top: 0;">1. Fan Information</div>
@@ -267,8 +310,8 @@
         <div class="form-group">
           <label>Select Ticket Tier Package <span class="req">*</span></label>
           <div id="packageContainer" class="package-container">
-            <div style="font-size: 13px; color: #94a3b8; padding: 14px; border: 1.5px dashed #cbd5e1; border-radius: 8px; text-align: center;">
-              Please select a Franchise Brand above to view available packages.
+            <div style="font-size: 13px; color: #94a3b8; padding: 14px; border: 1.5px dashed #2e2e38; border-radius: 8px; text-align: center;">
+              Please select a Franchise Brand above to view packages.
             </div>
           </div>
           <div class="error-text" id="err-package">Please select a ticket package.</div>
@@ -309,19 +352,19 @@
         <div class="summary-card">
           <div class="summary-row">
             <span>Customer:</span>
-            <span id="sumCustomer" style="font-weight: 600;">--</span>
+            <span id="sumCustomer" style="font-weight: 600; color: #fff;">--</span>
           </div>
           <div class="summary-row">
             <span>Franchise Brand:</span>
-            <span id="sumBrand" style="font-weight: 600;">--</span>
+            <span id="sumBrand" style="font-weight: 600; color: #fff;">--</span>
           </div>
           <div class="summary-row">
             <span>Ticket Package:</span>
-            <span id="sumType" style="font-weight: 600;">--</span>
+            <span id="sumType" style="font-weight: 600; color: #fff;">--</span>
           </div>
           <div class="summary-row">
             <span>Target Flow Tier:</span>
-            <span id="sumTier" style="font-weight: 600;">--</span>
+            <span id="sumTier" style="font-weight: 600; color: var(--primary);">--</span>
           </div>
           <div class="summary-row total">
             <span>Total:</span>
@@ -341,7 +384,7 @@
 <div id="adminModal">
   <div class="modal-box">
     <h3 style="margin-top: 0; font-size: 18px;">⚙️ Connected App Configuration</h3>
-    <p style="font-size: 13px; color: #64748b;">Credentials used for direct background OAuth token generation.</p>
+    <p style="font-size: 13px; color: #94a3b8;">Credentials used for direct background OAuth token generation.</p>
 
     <div class="form-group">
       <label>Salesforce Instance URL <span class="req">*</span></label>
@@ -359,8 +402,8 @@
     </div>
 
     <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px;">
-      <button onclick="closeSettings()" style="padding: 8px 16px; border: 1px solid #cbd5e1; background: #fff; border-radius: 6px; cursor: pointer;">Cancel</button>
-      <button onclick="saveSettings()" style="padding: 8px 16px; border: none; background: #026cdf; color: #fff; border-radius: 6px; cursor: pointer; font-weight: 600;">Save Credentials</button>
+      <button onclick="closeSettings()" style="padding: 8px 16px; border: 1px solid #33333d; background: #1b1b22; color: #fff; border-radius: 6px; cursor: pointer;">Cancel</button>
+      <button onclick="saveSettings()" style="padding: 8px 16px; border: none; background: var(--primary); color: #fff; border-radius: 6px; cursor: pointer; font-weight: 600;">Save Credentials</button>
     </div>
   </div>
 </div>
@@ -421,8 +464,8 @@
     selectedTargetTier = null;
 
     document.getElementById("packageContainer").innerHTML = `
-      <div style="font-size: 13px; color: #94a3b8; padding: 14px; border: 1.5px dashed #cbd5e1; border-radius: 8px; text-align: center;">
-        Please select a Franchise Brand above to view available packages.
+      <div style="font-size: 13px; color: #94a3b8; padding: 14px; border: 1.5px dashed #2e2e38; border-radius: 8px; text-align: center;">
+        Please select a Franchise Brand above to view packages.
       </div>
     `;
 
