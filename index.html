@@ -55,7 +55,7 @@
 
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-    /* Checkbox / Radio Package Cards */
+    /* Package Cards */
     .package-container { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
     .package-card {
       border: 2px solid var(--border);
@@ -76,7 +76,7 @@
     .pkg-desc { font-size: 12px; color: var(--text-muted); margin-left: 24px; }
     .pkg-tier-tag { font-size: 10px; font-weight: 700; text-transform: uppercase; background: #dbeafe; color: #1e40af; padding: 2px 6px; border-radius: 4px; margin-left: 6px; }
 
-    /* Summary Card */
+    /* Order Summary */
     .summary-card { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 16px; margin: 18px 0; }
     .summary-row { display: flex; justify-content: space-between; margin-bottom: 8px; font-size: 13px; color: var(--text-muted); }
     .summary-row.total { border-top: 1px dashed var(--border); padding-top: 10px; margin-top: 10px; font-size: 18px; font-weight: 800; color: var(--text-main); }
@@ -90,7 +90,7 @@
     .alert-success { background: var(--success-bg); color: #065f46; border: 1px solid #6ee7b7; }
     .alert-error { background: var(--error-bg); color: #991b1b; border: 1px solid #fca5a5; }
 
-    /* Settings Modal */
+    /* Connection Modal (No Member ID field anymore!) */
     #adminModal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.65); align-items: center; justify-content: center; z-index: 100; backdrop-filter: blur(2px); }
     .modal-box { background: white; border-radius: 12px; padding: 24px; max-width: 480px; width: 90%; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
   </style>
@@ -102,42 +102,43 @@
   <div class="nav-bar">
     <div class="brand-logo">MLSE <span>TICKETS</span></div>
     <div class="nav-actions">
-      <span class="auth-status" id="authBadge">Fan Ticketing Session</span>
+      <span class="auth-status">Unified Fan Portal</span>
       <button class="config-trigger" onclick="openSettings()">⚙️ Connection</button>
     </div>
   </div>
 
   <div class="checkout-grid">
-    <!-- Left Column: User Login & Ticket Choices -->
+    <!-- Left Column: Customer Information & Ticket Selection -->
     <div class="card">
       <div class="hero-banner">
         <h1>Official Fan Matchday Gateway</h1>
-        <p>Select your team and ticket package to automatically calculate tier pricing.</p>
+        <p>Enter your details and select your ticket package to secure your seats.</p>
       </div>
 
-      <div class="section-title" style="margin-top: 0;">1. Account Sign In</div>
+      <div class="section-title" style="margin-top: 0;">1. Customer Details</div>
 
       <div class="row-2">
         <div class="form-group">
           <label>First Name <span class="req">*</span></label>
-          <input type="text" id="fanFirstName" placeholder="" oninput="validateMandatory(this)">
+          <input type="text" id="fanFirstName" placeholder="Jane" oninput="validateMandatory(this)">
           <div class="error-text" id="err-fanFirstName">First name is required.</div>
         </div>
         <div class="form-group">
           <label>Last Name <span class="req">*</span></label>
-          <input type="text" id="fanLastName" placeholder="" oninput="validateMandatory(this)">
+          <input type="text" id="fanLastName" placeholder="Doe" oninput="validateMandatory(this)">
           <div class="error-text" id="err-fanLastName">Last name is required.</div>
         </div>
       </div>
 
       <div class="form-group">
-        <label>Account Email</label>
-        <input type="email" id="fanEmail" placeholder="">
+        <label>Email Address <span class="req">*</span></label>
+        <input type="email" id="fanEmail" placeholder="jane.doe@example.com" oninput="validateMandatory(this)">
+        <div class="error-text" id="err-fanEmail">A valid email address is required to link or create your profile.</div>
       </div>
 
       <div class="section-title">2. Select Your Team & Package</div>
 
-      <!-- Franchise Brand (Mandatory) -->
+      <!-- Franchise Brand -->
       <div class="form-group">
         <label>Franchise Brand <span class="req">*</span></label>
         <select id="brandSelect" onchange="validateMandatory(this); renderPackageCards();">
@@ -148,10 +149,10 @@
           <option value="Toronto Argonauts">Toronto Argonauts (CFL)</option>
           <option value="Live">Live (Concerts & Shows)</option>
         </select>
-        <div class="error-text" id="err-brandSelect">Please select a franchise brand first.</div>
+        <div class="error-text" id="err-brandSelect">Please select a franchise brand.</div>
       </div>
 
-      <!-- Package Selection (Checkbox / Radio Cards) -->
+      <!-- Package Selection -->
       <div class="form-group">
         <label>Select Ticket Tier Package <span class="req">*</span></label>
         <div id="packageContainer" class="package-container">
@@ -182,23 +183,27 @@
 
       <div class="form-group">
         <label id="accountLabel">Card Number <span class="req">*</span></label>
-        <input type="text" id="cardNumber" placeholder="" oninput="validateMandatory(this)">
+        <input type="text" id="cardNumber" placeholder="•••• •••• •••• ••••" oninput="validateMandatory(this)">
         <div class="error-text" id="err-cardNumber">Card number is required.</div>
       </div>
 
       <div class="row-2" id="cardExtraRow">
         <div class="form-group">
           <label>Expiry (MM/YY)</label>
-          <input type="text" id="cardExpiry" placeholder="">
+          <input type="text" id="cardExpiry" placeholder="12/28">
         </div>
         <div class="form-group">
           <label>CVV / CID</label>
-          <input type="text" id="cardCvv" placeholder="">
+          <input type="text" id="cardCvv" placeholder="123">
         </div>
       </div>
 
       <!-- Live Order Summary -->
       <div class="summary-card">
+        <div class="summary-row">
+          <span>Customer:</span>
+          <span id="sumCustomer" style="font-weight: 600;">--</span>
+        </div>
         <div class="summary-row">
           <span>Franchise Brand:</span>
           <span id="sumBrand" style="font-weight: 600;">--</span>
@@ -232,7 +237,7 @@
 <div id="adminModal">
   <div class="modal-box">
     <h3 style="margin-top: 0; font-size: 18px;">⚙️ Platform Connection Setup</h3>
-    <p style="font-size: 13px; color: #64748b;">Configure your Salesforce Developer Org URL, session token, and target member ID.</p>
+    <p style="font-size: 13px; color: #64748b;">Configure your Salesforce Developer Org URL and active session token.</p>
 
     <div class="form-group">
       <label>Salesforce Instance URL <span class="req">*</span></label>
@@ -240,14 +245,8 @@
     </div>
 
     <div class="form-group">
-      <label>Session Access Token (from Developer Console) <span class="req">*</span></label>
+      <label>Session Access Token <span class="req">*</span></label>
       <input type="password" id="cfgToken" placeholder="Paste 00D... token here">
-    </div>
-
-    <div class="form-group">
-      <label>Target LoyaltyProgramMember Record ID <span class="req">*</span></label>
-      <input type="text" id="cfgMemberId" placeholder="e.g. 0lMau000000nQgEAI">
-      <small style="color: #64748b; font-size: 11px;">The member profile ID where this ticket will attach.</small>
     </div>
 
     <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px;">
@@ -258,7 +257,6 @@
 </div>
 
 <script>
-  // Price Matrix by Franchise Brand and Ticket Type
   const brandPricing = {
     "Toronto Maple Leafs": {
       "Membership": { price: 4500.00, desc: "Full 41 Regular Season Games + Playoff Priority", tier: "Platinum" },
@@ -294,7 +292,6 @@
   window.onload = function() {
     if (localStorage.getItem("sfUrl")) document.getElementById("cfgUrl").value = localStorage.getItem("sfUrl");
     if (localStorage.getItem("sfToken")) document.getElementById("cfgToken").value = localStorage.getItem("sfToken");
-    if (localStorage.getItem("sfMemberId")) document.getElementById("cfgMemberId").value = localStorage.getItem("sfMemberId");
   };
 
   function openSettings() { document.getElementById("adminModal").style.display = "flex"; }
@@ -303,9 +300,8 @@
   function saveSettings() {
     localStorage.setItem("sfUrl", document.getElementById("cfgUrl").value.trim());
     localStorage.setItem("sfToken", document.getElementById("cfgToken").value.trim());
-    localStorage.setItem("sfMemberId", document.getElementById("cfgMemberId").value.trim());
     closeSettings();
-    alert("Connection configuration saved!");
+    alert("Connection settings saved!");
   }
 
   function handlePaymentChange() {
@@ -315,7 +311,6 @@
     document.getElementById("cardExtraRow").style.display = isCard ? "grid" : "none";
   }
 
-  // Dynamically renders the 3 package checkbox cards when the brand changes
   function renderPackageCards() {
     const brand = document.getElementById("brandSelect").value;
     const container = document.getElementById("packageContainer");
@@ -354,7 +349,6 @@
     updateSummary();
   }
 
-  // Handles clicking a package card
   function selectPackage(type, price, tier, cardId) {
     selectedTicketType = type;
     selectedTicketPrice = price;
@@ -376,7 +370,10 @@
   function updateSummary() {
     const brand = document.getElementById("brandSelect").value || "--";
     const pay = document.getElementById("payMethodSelect").value || "--";
+    const first = document.getElementById("fanFirstName").value.trim();
+    const last = document.getElementById("fanLastName").value.trim();
 
+    document.getElementById("sumCustomer").innerText = (first || last) ? `${first} ${last}` : "--";
     document.getElementById("sumBrand").innerText = brand;
     document.getElementById("sumType").innerText = selectedTicketType || "--";
     document.getElementById("sumTier").innerText = selectedTargetTier ? `${selectedTargetTier}` : "--";
@@ -396,6 +393,7 @@
       elem.classList.remove("input-error");
       if (errElem) errElem.style.display = "none";
     }
+    updateSummary();
     return isValid;
   }
 
@@ -405,18 +403,17 @@
 
     const sfUrl = localStorage.getItem("sfUrl") || document.getElementById("cfgUrl").value.trim().replace(/\/$/, "");
     const sfToken = localStorage.getItem("sfToken") || document.getElementById("cfgToken").value.trim();
-    const memberId = localStorage.getItem("sfMemberId") || document.getElementById("cfgMemberId").value.trim();
 
-    if (!sfUrl || !sfToken || !memberId) {
+    if (!sfUrl || !sfToken) {
       alertBox.className = "alert alert-error";
-      alertBox.innerHTML = "⚠️ Please open <strong>⚙️ Connection</strong> (top right) to enter your Salesforce URL, Session Token, and Target Member ID.";
+      alertBox.innerHTML = "⚠️ Please open <strong>⚙️ Connection</strong> (top right) to enter your Salesforce URL and Session Token.";
       alertBox.style.display = "block";
       return;
     }
 
-    // Validation
     const isFirstValid = validateMandatory(document.getElementById("fanFirstName"));
     const isLastValid = validateMandatory(document.getElementById("fanLastName"));
+    const isEmailValid = validateMandatory(document.getElementById("fanEmail"));
     const isBrandValid = validateMandatory(document.getElementById("brandSelect"));
     const isCardValid = validateMandatory(document.getElementById("cardNumber"));
 
@@ -426,9 +423,9 @@
       isPkgValid = false;
     }
 
-    if (!isFirstValid || !isLastValid || !isBrandValid || !isPkgValid || !isCardValid) {
+    if (!isFirstValid || !isLastValid || !isEmailValid || !isBrandValid || !isPkgValid || !isCardValid) {
       alertBox.className = "alert alert-error";
-      alertBox.innerHTML = "⚠️ Please complete all mandatory fields: First Name, Last Name, Franchise Brand, Ticket Package Selection, and Card Number.";
+      alertBox.innerHTML = "⚠️ Please complete all required customer, franchise, and payment details.";
       alertBox.style.display = "block";
       return;
     }
@@ -437,23 +434,24 @@
     btn.disabled = true;
     btn.innerText = "Processing Order...";
 
+    const firstName = document.getElementById("fanFirstName").value.trim();
+    const lastName = document.getElementById("fanLastName").value.trim();
+    const email = document.getElementById("fanEmail").value.trim();
     const brand = document.getElementById("brandSelect").value;
-    const pDate = new Date().toISOString().split("T")[0];
-    const extId = "TM-" + Date.now();
     const payMethod = document.getElementById("payMethodSelect").value || "Credit Card";
 
     const payload = {
-      "Loyalty_Program_Member__c": memberId,
-      "Brand__c": brand,
-      "Ticket_Type__c": selectedTicketType,
-      "Amount__c": selectedTicketPrice,
-      "Purchase_Date__c": pDate,
-      "External_Ticket_ID__c": extId
-      
+      "firstName": firstName,
+      "lastName": lastName,
+      "email": email,
+      "brand": brand,
+      "ticketType": selectedTicketType,
+      "amount": selectedTicketPrice
     };
 
     try {
-      const response = await fetch(`${sfUrl}/services/data/v60.0/sobjects/Ticket_Purchase__c`, {
+      // Calls custom Apex REST endpoint: resolves existing members or creates new ones automatically
+      const response = await fetch(`${sfUrl}/services/apexrest/FanCheckout`, {
         method: "POST",
         headers: {
           "Authorization": `Bearer ${sfToken}`,
@@ -467,14 +465,15 @@
       if (response.ok && res.success) {
         alertBox.className = "alert alert-success";
         alertBox.innerHTML = `🎉 <strong>Order Confirmed!</strong><br>
-          • <strong>Confirmation Ref:</strong> <code>${res.id}</code><br>
+          • <strong>Customer:</strong> ${firstName} ${lastName} (${email})<br>
+          • <strong>Loyalty Member ID:</strong> <code>${res.memberId}</code> (Auto-resolved)<br>
+          • <strong>Ticket Record ID:</strong> <code>${res.ticketId}</code><br>
           • <strong>Franchise Brand:</strong> ${brand}<br>
           • <strong>Package:</strong> ${selectedTicketType} ($${selectedTicketPrice.toLocaleString("en-US", {minimumFractionDigits: 2})} CAD)<br>
-          • <strong>Payment Method:</strong> ${payMethod}<br>
-          • <strong>Loyalty Update:</strong> Status updated for <strong>${brand}</strong> to <strong>${selectedTargetTier}</strong> in real time.`;
+          • <strong>Loyalty Status:</strong> Status elevated for <strong>${brand}</strong> to <strong>${selectedTargetTier}</strong>!`;
         alertBox.style.display = "block";
       } else {
-        throw new Error(res[0] ? res[0].message : JSON.stringify(res));
+        throw new Error(res.message || (res[0] ? res[0].message : JSON.stringify(res)));
       }
     } catch (err) {
       alertBox.className = "alert alert-error";
