@@ -100,19 +100,19 @@
       <div class="row-2">
         <div class="form-group">
           <label>First Name <span class="req">*</span></label>
-          <input type="text" id="fanFirstName" placeholder="e.g. John" oninput="validateMandatory(this)">
+          <input type="text" id="fanFirstName" autocomplete="off" oninput="validateMandatory(this)">
           <div class="error-text" id="err-fanFirstName">First name is required.</div>
         </div>
         <div class="form-group">
           <label>Last Name <span class="req">*</span></label>
-          <input type="text" id="fanLastName" placeholder="e.g. Doe" oninput="validateMandatory(this)">
+          <input type="text" id="fanLastName" autocomplete="off" oninput="validateMandatory(this)">
           <div class="error-text" id="err-fanLastName">Last name is required.</div>
         </div>
       </div>
 
       <div class="form-group">
         <label>Email Address <span class="req">*</span></label>
-        <input type="email" id="fanEmail" placeholder="e.g. john.doe@example.com" oninput="validateMandatory(this)">
+        <input type="email" id="fanEmail" autocomplete="off" oninput="validateMandatory(this)">
         <div class="error-text" id="err-fanEmail">A valid email address is required.</div>
       </div>
 
@@ -156,18 +156,18 @@
 
       <div class="form-group">
         <label>Card Number <span class="req">*</span></label>
-        <input type="text" id="cardNumber" placeholder="4500 •••• •••• 1234" oninput="validateMandatory(this)">
+        <input type="text" id="cardNumber" autocomplete="off" oninput="validateMandatory(this)">
         <div class="error-text" id="err-cardNumber">Card number is required.</div>
       </div>
 
       <div class="row-2">
         <div class="form-group">
           <label>Expiry (MM/YY)</label>
-          <input type="text" id="cardExpiry" placeholder="12/28">
+          <input type="text" id="cardExpiry" autocomplete="off">
         </div>
         <div class="form-group">
           <label>CVV / CID</label>
-          <input type="text" id="cardCvv" placeholder="123">
+          <input type="text" id="cardCvv" autocomplete="off">
         </div>
       </div>
 
@@ -209,17 +209,17 @@
 
     <div class="form-group">
       <label>Salesforce Instance URL <span class="req">*</span></label>
-      <input type="text" id="cfgUrl" placeholder="https://accenture307.my.salesforce.com">
+      <input type="text" id="cfgUrl">
     </div>
 
     <div class="form-group">
       <label>Consumer Key (Client ID) <span class="req">*</span></label>
-      <input type="text" id="cfgClientId" placeholder="Paste Consumer Key">
+      <input type="text" id="cfgClientId">
     </div>
 
     <div class="form-group">
       <label>Consumer Secret (Client Secret) <span class="req">*</span></label>
-      <input type="password" id="cfgClientSecret" placeholder="Paste Consumer Secret">
+      <input type="password" id="cfgClientSecret">
     </div>
 
     <div style="display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px;">
@@ -263,9 +263,21 @@
   let selectedTargetTier = null;
 
   window.onload = function() {
+    // Retain configuration settings
     document.getElementById("cfgUrl").value = localStorage.getItem("sfUrl") || "https://accenture307.my.salesforce.com";
     if (localStorage.getItem("sfClientId")) document.getElementById("cfgClientId").value = localStorage.getItem("sfClientId");
     if (localStorage.getItem("sfClientSecret")) document.getElementById("cfgClientSecret").value = localStorage.getItem("sfClientSecret");
+
+    // Explicitly enforce that all user-facing inputs start blank on reload
+    document.getElementById("fanFirstName").value = "";
+    document.getElementById("fanLastName").value = "";
+    document.getElementById("fanEmail").value = "";
+    document.getElementById("cardNumber").value = "";
+    document.getElementById("cardExpiry").value = "";
+    document.getElementById("cardCvv").value = "";
+    document.getElementById("brandSelect").selectedIndex = 0;
+
+    updateSummary();
   };
 
   function openSettings() { document.getElementById("adminModal").style.display = "flex"; }
@@ -275,7 +287,7 @@
     localStorage.setItem("sfUrl", document.getElementById("cfgUrl").value.trim().replace(/\/$/, ""));
     localStorage.setItem("sfClientId", document.getElementById("cfgClientId").value.trim());
     localStorage.setItem("sfClientSecret", document.getElementById("cfgClientSecret").value.trim());
-    sessionStorage.removeItem("cachedToken"); // Clear old token
+    sessionStorage.removeItem("cachedToken");
     closeSettings();
     alert("Connected App settings saved!");
   }
@@ -417,7 +429,7 @@
 
     if (!isFirstValid || !isLastValid || !isEmailValid || !isBrandValid || !isPkgValid || !isCardValid) {
       alertBox.className = "alert alert-error";
-      alertBox.innerHTML = "⚠️ Please complete all required customer details and choose a ticket package.";
+      alertBox.innerHTML = "⚠️️ Please complete all required customer details and choose a ticket package.";
       alertBox.style.display = "block";
       return;
     }
@@ -427,7 +439,6 @@
     btn.innerText = "Authenticating & Ingesting...";
 
     try {
-      // 1. Get automated token from Connected App
       const authToken = await getConnectedAppToken(sfUrl, clientId, clientSecret);
 
       const firstName = document.getElementById("fanFirstName").value.trim();
@@ -444,7 +455,6 @@
         "amount": selectedTicketPrice
       };
 
-      // 2. Post to custom Apex REST resource
       const response = await fetch(`${sfUrl}/services/apexrest/FanCheckout`, {
         method: "POST",
         headers: {
@@ -467,10 +477,14 @@
           • <strong>Loyalty Tier:</strong> Promoted to <strong>${selectedTargetTier}</strong>!`;
         alertBox.style.display = "block";
 
+        // Reset input fields to completely blank after order completion
         document.getElementById("fanFirstName").value = "";
         document.getElementById("fanLastName").value = "";
         document.getElementById("fanEmail").value = "";
         document.getElementById("cardNumber").value = "";
+        document.getElementById("cardExpiry").value = "";
+        document.getElementById("cardCvv").value = "";
+        updateSummary();
       } else {
         throw new Error(res.message || (res[0] ? res[0].message : JSON.stringify(res)));
       }
