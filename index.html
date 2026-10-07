@@ -158,7 +158,7 @@
       background: #101014;
     }
     .package-card:hover { border-color: #4b4b58; background: #16161c; }
-    .package-card.selected { border-color: var(--primary); background-color: #220b0b; }
+    .package-card.selected { border-color: var(--primary) !important; background-color: #220b0b !important; }
     
     .pkg-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
     .pkg-name { font-weight: 700; font-size: 14px; color: #ffffff; display: flex; align-items: center; gap: 8px; }
@@ -263,19 +263,19 @@
         <div class="row-2">
           <div class="form-group">
             <label>First Name <span class="req">*</span></label>
-            <input type="text" id="fanFirstName" name="nofill_first" autocomplete="new-password">
+            <input type="text" id="fanFirstName" name="nofill_first" autocomplete="new-password" oninput="validateMandatory(this)">
             <div class="error-text" id="err-fanFirstName">First name is required.</div>
           </div>
           <div class="form-group">
             <label>Last Name <span class="req">*</span></label>
-            <input type="text" id="fanLastName" name="nofill_last" autocomplete="new-password">
+            <input type="text" id="fanLastName" name="nofill_last" autocomplete="new-password" oninput="validateMandatory(this)">
             <div class="error-text" id="err-fanLastName">Last name is required.</div>
           </div>
         </div>
 
         <div class="form-group">
           <label>Email Address <span class="req">*</span></label>
-          <input type="text" inputmode="email" id="fanEmail" name="nofill_email_address" autocomplete="new-password">
+          <input type="text" inputmode="email" id="fanEmail" name="nofill_email_address" autocomplete="new-password" oninput="validateMandatory(this)">
           <div class="error-text" id="err-fanEmail">A valid email address is required.</div>
         </div>
 
@@ -283,7 +283,7 @@
 
         <div class="form-group">
           <label>Franchise Brand <span class="req">*</span></label>
-          <select id="brandSelect">
+          <select id="brandSelect" onchange="handleBrandChange(this)">
             <option value="" disabled selected>-- Select Franchise Brand --</option>
             <option value="Toronto Maple Leafs">Toronto Maple Leafs (NHL)</option>
             <option value="Toronto Raptors">Toronto Raptors (NBA)</option>
@@ -319,7 +319,7 @@
 
         <div class="form-group">
           <label>Card Number <span class="req">*</span></label>
-          <input type="text" id="cardNumber" name="nofill_card_num" autocomplete="new-password">
+          <input type="text" id="cardNumber" name="nofill_card_num" autocomplete="new-password" oninput="validateMandatory(this)">
           <div class="error-text" id="err-cardNumber">Card number is required.</div>
         </div>
 
@@ -425,6 +425,14 @@
   var selectedTicketPrice = 0.0;
   var selectedTargetTier = null;
 
+  window.onload = function() {
+    var savedUrl = localStorage.getItem("sfUrl") || "https://accenture307.my.salesforce.com";
+    document.getElementById("cfgUrl").value = savedUrl;
+    if (localStorage.getItem("sfClientId")) document.getElementById("cfgClientId").value = localStorage.getItem("sfClientId");
+    if (localStorage.getItem("sfClientSecret")) document.getElementById("cfgClientSecret").value = localStorage.getItem("sfClientSecret");
+    resetAllFields();
+  };
+
   function validateMandatory(elem) {
     if (!elem) return false;
     var val = (elem.value || "").trim();
@@ -451,6 +459,11 @@
     if (raw.indexOf("Argonauts") !== -1) return "Toronto Argonauts";
     if (raw.indexOf("Live") !== -1) return "Live";
     return raw;
+  }
+
+  function handleBrandChange(elem) {
+    validateMandatory(elem);
+    renderPackageCards();
   }
 
   function renderPackageCards() {
@@ -676,3 +689,60 @@
       var memberRes = await fetch(sfUrl + "/services/data/v60.0/sobjects/LoyaltyProgramMember/", {
         method: "POST",
         headers: headers,
+        body: JSON.stringify({
+          "ProgramId": programId,
+          "AccountId": newAccountId,
+          "ContactId": newContactId,
+          "MemberType": "Individual",
+          "MemberStatus": "Active",
+          "EnrollmentDate": todayStr
+        })
+      });
+      var memberData = await memberRes.json();
+      if (!memberData.success) throw new Error("Loyalty Member creation failed: " + JSON.stringify(memberData));
+      var newMemberId = memberData.id;
+
+      // 5. Ticket Purchase
+      var ticketRes = await fetch(sfUrl + "/services/data/v60.0/sobjects/Ticket_Purchase__c/", {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({
+          "Loyalty_Program_Member__c": newMemberId,
+          "Brand__c": brand,
+          "Ticket_Type__c": ticketTypeSnapshot,
+          "Amount__c": priceSnapshot,
+          "Purchase_Date__c": todayStr
+        })
+      });
+      var ticketData = await ticketRes.json();
+      if (!ticketData.success) throw new Error("Ticket record creation failed: " + JSON.stringify(ticketData));
+      var newTicketId = ticketData.id;
+
+      // 6. Success Alert
+      alertBox.className = "alert alert-success";
+      alertBox.innerHTML = "<strong>Ticket Ingested via Connected App!</strong><br>" +
+        "- <strong>Customer:</strong> " + firstName + " " + lastName + " (" + email + ")<br>" +
+        "- <strong>Account ID:</strong> <code>" + newAccountId + "</code><br>" +
+        "- <strong>Contact ID:</strong> <code>" + newContactId + "</code><br>" +
+        "- <strong>Loyalty Member ID:</strong> <code>" + newMemberId + "</code><br>" +
+        "- <strong>Ticket Record ID:</strong> <code>" + newTicketId + "</code><br>" +
+        "- <strong>Franchise Brand:</strong> " + brand + "<br>" +
+        "- <strong>Package:</strong> " + ticketTypeSnapshot + " ($" + priceSnapshot.toLocaleString("en-US", {minimumFractionDigits: 2}) + " CAD)<br>" +
+        "- <strong>Loyalty Tier:</strong> Promoted to <strong>" + tierSnapshot + "</strong>!";
+      alertBox.style.display = "block";
+
+      resetAllFields();
+
+    } catch (err) {
+      alertBox.className = "alert alert-error";
+      alertBox.innerHTML = "<strong>Ingestion Error:</strong> " + err.message;
+      alertBox.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "Complete Order & Buy Tickets";
+    }
+  }
+</script>
+
+</body>
+</html>
