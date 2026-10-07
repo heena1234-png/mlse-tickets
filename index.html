@@ -9,7 +9,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #da291c;            /* Rogers / Raptors Crimson Red */
+      --primary: #da291c;             /* Rogers / Raptors Crimson Red */
       --primary-hover: #b81d12;
       --bg-main: #0a0a0c;             /* Deep Onyx Black */
       --card-bg: #141418;             /* Rich Dark Charcoal */
@@ -50,7 +50,6 @@
       object-fit: contain;
       display: block;
     }
-    /* Fallback stylized text logo if image is loading or 404 */
     .brand-text-fallback {
       display: flex;
       align-items: center;
@@ -249,7 +248,6 @@
   <!-- Brand Header Navigation -->
   <header class="header-nav">
     <div class="brand-container">
-      <!-- Tries to load uploaded mlse-logo.png; if missing, falls back cleanly -->
       <img src="mlse-logo.png" alt="Rogers x MLSE Logo" class="brand-logo-img" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex';">
       <div id="logoFallback" class="brand-text-fallback" style="display: none;">
         <span class="rogers-tag">🔴 ROGERS</span> <span>× MLSE</span>
@@ -539,155 +537,4 @@
             <span>${typeKey}</span>
             <span class="pkg-tier-tag">${pkg.tier}</span>
           </div>
-          <div class="pkg-price">$${pkg.price.toLocaleString("en-US", {minimumFractionDigits: 2})}</div>
-        </div>
-        <div class="pkg-desc">${pkg.desc}</div>
-      `;
-      container.appendChild(card);
-    });
-    updateSummary();
-  }
-
-  function selectPackage(type, price, tier, cardId) {
-    selectedTicketType = type;
-    selectedTicketPrice = price;
-    selectedTargetTier = tier;
-
-    document.querySelectorAll(".package-card").forEach(c => c.classList.remove("selected"));
-    document.querySelectorAll(".pkg-radio").forEach(r => r.checked = false);
-
-    const activeCard = document.getElementById(cardId);
-    if (activeCard) {
-      activeCard.classList.add("selected");
-      activeCard.querySelector(".pkg-radio").checked = true;
-    }
-    document.getElementById("err-package").style.display = "none";
-    updateSummary();
-  }
-
-  function updateSummary() {
-    const brand = document.getElementById("brandSelect").value || "--";
-    const first = document.getElementById("fanFirstName").value.trim();
-    const last = document.getElementById("fanLastName").value.trim();
-
-    document.getElementById("sumCustomer").innerText = (first || last) ? `${first} ${last}` : "--";
-    document.getElementById("sumBrand").innerText = brand;
-    document.getElementById("sumType").innerText = selectedTicketType || "--";
-    document.getElementById("sumTier").innerText = selectedTargetTier ? `${selectedTargetTier}` : "--";
-    document.getElementById("sumAmount").innerText = "$" + selectedTicketPrice.toLocaleString("en-US", {minimumFractionDigits: 2}) + " CAD";
-  }
-
-  function validateMandatory(elem) {
-    const val = (elem.value || "").trim();
-    const isValid = val.length > 0;
-    const errElem = document.getElementById("err-" + elem.id);
-
-    if (!isValid) {
-      elem.classList.add("input-error");
-      if (errElem) errElem.style.display = "block";
-    } else {
-      elem.classList.remove("input-error");
-      if (errElem) errElem.style.display = "none";
-    }
-    updateSummary();
-    return isValid;
-  }
-
-  async function processTicketIngestion() {
-    const alertBox = document.getElementById("statusAlert");
-    alertBox.style.display = "none";
-
-    const sfUrl = localStorage.getItem("sfUrl") || "https://accenture307.my.salesforce.com";
-    const clientId = localStorage.getItem("sfClientId");
-    const clientSecret = localStorage.getItem("sfClientSecret");
-
-    if (!clientId || !clientSecret) {
-      alertBox.className = "alert alert-error";
-      alertBox.innerHTML = "⚠️ Please open <strong>⚙️ Connected App Config</strong> and save your Consumer Key & Secret.";
-      alertBox.style.display = "block";
-      openSettings();
-      return;
-    }
-
-    const isFirstValid = validateMandatory(document.getElementById("fanFirstName"));
-    const isLastValid = validateMandatory(document.getElementById("fanLastName"));
-    const isEmailValid = validateMandatory(document.getElementById("fanEmail"));
-    const isBrandValid = validateMandatory(document.getElementById("brandSelect"));
-    const isCardValid = validateMandatory(document.getElementById("cardNumber"));
-
-    let isPkgValid = true;
-    if (!selectedTicketType) {
-      document.getElementById("err-package").style.display = "block";
-      isPkgValid = false;
-    }
-
-    if (!isFirstValid || !isLastValid || !isEmailValid || !isBrandValid || !isPkgValid || !isCardValid) {
-      alertBox.className = "alert alert-error";
-      alertBox.innerHTML = "⚠️ Please complete all required customer details and choose a ticket package.";
-      alertBox.style.display = "block";
-      return;
-    }
-
-    const btn = document.getElementById("payBtn");
-    btn.disabled = true;
-    btn.innerText = "Transmitting to Salesforce...";
-
-    const firstName = document.getElementById("fanFirstName").value.trim();
-    const lastName = document.getElementById("fanLastName").value.trim();
-    const email = document.getElementById("fanEmail").value.trim();
-    const brand = document.getElementById("brandSelect").value;
-    const ticketTypeSnapshot = selectedTicketType;
-    const priceSnapshot = selectedTicketPrice;
-    const tierSnapshot = selectedTargetTier;
-
-    try {
-      const authToken = await getConnectedAppToken(sfUrl, clientId, clientSecret);
-
-      const payload = {
-        "firstName": firstName,
-        "lastName": lastName,
-        "email": email,
-        "brand": brand,
-        "ticketType": ticketTypeSnapshot,
-        "amount": priceSnapshot
-      };
-
-      const response = await fetch(`${sfUrl}/services/apexrest/FanCheckout`, {
-        method: "POST",
-        headers: {
-          "Authorization": `Bearer ${authToken}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const res = await response.json();
-
-      if (response.ok && res.success) {
-        alertBox.className = "alert alert-success";
-        alertBox.innerHTML = `🎉 <strong>Ticket Ingested via Connected App!</strong><br>
-          • <strong>Customer:</strong> ${firstName} ${lastName} (${email})<br>
-          • <strong>Loyalty Member ID:</strong> <code>${res.memberId}</code><br>
-          • <strong>Ticket Record ID:</strong> <code>${res.ticketId}</code><br>
-          • <strong>Franchise Brand:</strong> ${brand}<br>
-          • <strong>Package:</strong> ${ticketTypeSnapshot} ($${priceSnapshot.toLocaleString("en-US", {minimumFractionDigits: 2})} CAD)<br>
-          • <strong>Loyalty Tier:</strong> Promoted to <strong>${tierSnapshot}</strong>!`;
-        alertBox.style.display = "block";
-
-        resetAllFields();
-      } else {
-        throw new Error(res.message || (res[0] ? res[0].message : JSON.stringify(res)));
-      }
-    } catch (err) {
-      alertBox.className = "alert alert-error";
-      alertBox.innerHTML = `❌ <strong>Ingestion Error:</strong> ${err.message}`;
-      alertBox.style.display = "block";
-    } finally {
-      btn.disabled = false;
-      btn.innerText = "Complete Order & Buy Tickets";
-    }
-  }
-</script>
-
-</body>
-</html>
+          <div class="
