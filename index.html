@@ -263,19 +263,19 @@
         <div class="row-2">
           <div class="form-group">
             <label>First Name <span class="req">*</span></label>
-            <input type="text" id="fanFirstName" name="nofill_first" autocomplete="new-password" oninput="validateMandatory(this)">
+            <input type="text" id="fanFirstName" name="nofill_first" autocomplete="new-password">
             <div class="error-text" id="err-fanFirstName">First name is required.</div>
           </div>
           <div class="form-group">
             <label>Last Name <span class="req">*</span></label>
-            <input type="text" id="fanLastName" name="nofill_last" autocomplete="new-password" oninput="validateMandatory(this)">
+            <input type="text" id="fanLastName" name="nofill_last" autocomplete="new-password">
             <div class="error-text" id="err-fanLastName">Last name is required.</div>
           </div>
         </div>
 
         <div class="form-group">
           <label>Email Address <span class="req">*</span></label>
-          <input type="text" inputmode="email" id="fanEmail" name="nofill_email_address" autocomplete="new-password" oninput="validateMandatory(this)">
+          <input type="text" inputmode="email" id="fanEmail" name="nofill_email_address" autocomplete="new-password">
           <div class="error-text" id="err-fanEmail">A valid email address is required.</div>
         </div>
 
@@ -283,7 +283,7 @@
 
         <div class="form-group">
           <label>Franchise Brand <span class="req">*</span></label>
-          <select id="brandSelect" onchange="handleBrandChange(this)">
+          <select id="brandSelect">
             <option value="" disabled selected>-- Select Franchise Brand --</option>
             <option value="Toronto Maple Leafs">Toronto Maple Leafs (NHL)</option>
             <option value="Toronto Raptors">Toronto Raptors (NBA)</option>
@@ -319,7 +319,7 @@
 
         <div class="form-group">
           <label>Card Number <span class="req">*</span></label>
-          <input type="text" id="cardNumber" name="nofill_card_num" autocomplete="new-password" oninput="validateMandatory(this)">
+          <input type="text" id="cardNumber" name="nofill_card_num" autocomplete="new-password">
           <div class="error-text" id="err-cardNumber">Card number is required.</div>
         </div>
 
@@ -393,7 +393,7 @@
 </div>
 
 <script>
-  const brandPricing = {
+  var brandPricing = {
     "Toronto Maple Leafs": {
       "Membership": { price: 4500.00, desc: "Full 41 Regular Season Games + Playoff Priority", tier: "Platinum" },
       "Half Season": { price: 2100.00, desc: "20 Home Game Matchday Pack", tier: "Gold" },
@@ -421,40 +421,121 @@
     }
   };
 
-  let selectedTicketType = null;
-  let selectedTicketPrice = 0.0;
-  let selectedTargetTier = null;
+  var selectedTicketType = null;
+  var selectedTicketPrice = 0.0;
+  var selectedTargetTier = null;
 
-  window.onload = function() {
-    document.getElementById("cfgUrl").value = localStorage.getItem("sfUrl") || "https://accenture307.my.salesforce.com";
-    if (localStorage.getItem("sfClientId")) document.getElementById("cfgClientId").value = localStorage.getItem("sfClientId");
-    if (localStorage.getItem("sfClientSecret")) document.getElementById("cfgClientSecret").value = localStorage.getItem("sfClientSecret");
+  function validateMandatory(elem) {
+    if (!elem) return false;
+    var val = (elem.value || "").trim();
+    var isValid = val.length > 0;
+    var errElem = document.getElementById("err-" + elem.id);
 
-    resetAllFields();
-  };
+    if (!isValid) {
+      elem.classList.add("input-error");
+      if (errElem) errElem.style.display = "block";
+    } else {
+      elem.classList.remove("input-error");
+      if (errElem) errElem.style.display = "none";
+    }
+    updateSummary();
+    return isValid;
+  }
+
+  function getNormalizedBrand() {
+    var brandElem = document.getElementById("brandSelect");
+    var raw = (brandElem && brandElem.value) ? brandElem.value.trim() : "";
+    if (raw.indexOf("Maple Leafs") !== -1) return "Toronto Maple Leafs";
+    if (raw.indexOf("Raptors") !== -1) return "Toronto Raptors";
+    if (raw.indexOf("FC") !== -1) return "Toronto FC";
+    if (raw.indexOf("Argonauts") !== -1) return "Toronto Argonauts";
+    if (raw.indexOf("Live") !== -1) return "Live";
+    return raw;
+  }
+
+  function renderPackageCards() {
+    var brand = getNormalizedBrand();
+    var container = document.getElementById("packageContainer");
+    if (!container) return;
+
+    container.innerHTML = "";
+    selectedTicketType = null;
+    selectedTicketPrice = 0.0;
+    selectedTargetTier = null;
+    var errPkg = document.getElementById("err-package");
+    if (errPkg) errPkg.style.display = "none";
+
+    if (!brand || !brandPricing[brand]) {
+      container.innerHTML = '<div style="font-size: 13px; color: #94a3b8; padding: 14px; border: 1.5px dashed #2e2e38; border-radius: 8px; text-align: center;">Please select a Franchise Brand above to view packages.</div>';
+      updateSummary();
+      return;
+    }
+
+    var packages = brandPricing[brand];
+    Object.keys(packages).forEach(function(typeKey) {
+      var pkg = packages[typeKey];
+      var card = document.createElement("div");
+      card.className = "package-card";
+      card.id = "pkg-" + typeKey.replace(/\s+/g, '');
+      card.onclick = function() { selectPackage(typeKey, pkg.price, pkg.tier, card.id); };
+
+      card.innerHTML = 
+        '<div class="pkg-header">' +
+          '<div class="pkg-name">' +
+            '<input type="radio" name="ticketPkgRadio" class="pkg-radio" id="radio-' + typeKey.replace(/\s+/g, '') + '">' +
+            '<span>' + typeKey + '</span>' +
+            '<span class="pkg-tier-tag">' + pkg.tier + '</span>' +
+          '</div>' +
+          '<div class="pkg-price">$' + pkg.price.toLocaleString("en-US", {minimumFractionDigits: 2}) + '</div>' +
+        '</div>' +
+        '<div class="pkg-desc">' + pkg.desc + '</div>';
+      container.appendChild(card);
+    });
+    updateSummary();
+  }
+
+  function selectPackage(type, price, tier, cardId) {
+    selectedTicketType = type;
+    selectedTicketPrice = price;
+    selectedTargetTier = tier;
+
+    document.querySelectorAll(".package-card").forEach(function(c) { c.classList.remove("selected"); });
+    document.querySelectorAll(".pkg-radio").forEach(function(r) { r.checked = false; });
+
+    var activeCard = document.getElementById(cardId);
+    if (activeCard) {
+      activeCard.classList.add("selected");
+      var radio = activeCard.querySelector(".pkg-radio");
+      if (radio) radio.checked = true;
+    }
+    var errPkg = document.getElementById("err-package");
+    if (errPkg) errPkg.style.display = "none";
+    updateSummary();
+  }
+
+  function updateSummary() {
+    var brand = getNormalizedBrand() || "--";
+    var first = (document.getElementById("fanFirstName").value || "").trim();
+    var last = (document.getElementById("fanLastName").value || "").trim();
+
+    document.getElementById("sumCustomer").innerText = (first || last) ? (first + " " + last) : "--";
+    document.getElementById("sumBrand").innerText = brand;
+    document.getElementById("sumType").innerText = selectedTicketType || "--";
+    document.getElementById("sumTier").innerText = selectedTargetTier ? selectedTargetTier : "--";
+    document.getElementById("sumAmount").innerText = "$" + selectedTicketPrice.toLocaleString("en-US", {minimumFractionDigits: 2}) + " CAD";
+  }
 
   function resetAllFields() {
     document.getElementById("orderForm").reset();
-    document.getElementById("fanFirstName").value = "";
-    document.getElementById("fanLastName").value = "";
-    document.getElementById("fanEmail").value = "";
-    document.getElementById("cardNumber").value = "";
-    document.getElementById("cardExpiry").value = "";
-    document.getElementById("cardCvv").value = "";
-    document.getElementById("brandSelect").selectedIndex = 0;
-
     selectedTicketType = null;
     selectedTicketPrice = 0.0;
     selectedTargetTier = null;
 
-    document.getElementById("packageContainer").innerHTML = `
-      <div style="font-size: 13px; color: #94a3b8; padding: 14px; border: 1.5px dashed #2e2e38; border-radius: 8px; text-align: center;">
-        Please select a Franchise Brand above to view packages.
-      </div>
-    `;
+    document.getElementById("packageContainer").innerHTML = 
+      '<div style="font-size: 13px; color: #94a3b8; padding: 14px; border: 1.5px dashed #2e2e38; border-radius: 8px; text-align: center;">Please select a Franchise Brand above to view packages.</div>';
 
-    document.querySelectorAll(".input-error").forEach(el => el.classList.remove("input-error"));
-    document.querySelectorAll(".error-text").forEach(el => el.style.display = "none");
+    document.querySelectorAll(".input-error").forEach(function(el) { el.classList.remove("input-error"); });
+    document.querySelectorAll(".error-text").forEach(function(el) { el.style.display = "none"; });
 
     updateSummary();
   }
@@ -476,19 +557,19 @@
       return sessionStorage.getItem("cachedToken");
     }
 
-    const bodyParams = new URLSearchParams({
+    var bodyParams = new URLSearchParams({
       grant_type: "client_credentials",
       client_id: clientId,
       client_secret: clientSecret
     });
 
-    const response = await fetch(`${sfUrl}/services/oauth2/token`, {
+    var response = await fetch(sfUrl + "/services/oauth2/token", {
       method: "POST",
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: bodyParams.toString()
     });
 
-    const data = await response.json();
+    var data = await response.json();
     if (data.access_token) {
       sessionStorage.setItem("cachedToken", data.access_token);
       return data.access_token;
@@ -497,53 +578,101 @@
     }
   }
 
-  function getNormalizedBrand() {
-    const raw = (document.getElementById("brandSelect").value || "").trim();
-    if (raw.includes("Maple Leafs")) return "Toronto Maple Leafs";
-    if (raw.includes("Raptors")) return "Toronto Raptors";
-    if (raw.includes("FC")) return "Toronto FC";
-    if (raw.includes("Argonauts")) return "Toronto Argonauts";
-    if (raw.includes("Live")) return "Live";
-    return raw;
-  }
+  async function processTicketIngestion() {
+    var alertBox = document.getElementById("statusAlert");
+    alertBox.style.display = "none";
 
-  function handleBrandChange(elem) {
-    validateMandatory(elem);
-    renderPackageCards();
-  }
+    var sfUrl = localStorage.getItem("sfUrl") || "https://accenture307.my.salesforce.com";
+    var clientId = localStorage.getItem("sfClientId");
+    var clientSecret = localStorage.getItem("sfClientSecret");
 
-  function renderPackageCards() {
-    const brand = getNormalizedBrand();
-    const container = document.getElementById("packageContainer");
-    container.innerHTML = "";
-    selectedTicketType = null;
-    selectedTicketPrice = 0.0;
-    selectedTargetTier = null;
-    document.getElementById("err-package").style.display = "none";
-
-    if (!brand || !brandPricing[brand]) {
-      container.innerHTML = `
-        <div style="font-size: 13px; color: #94a3b8; padding: 14px; border: 1.5px dashed #2e2e38; border-radius: 8px; text-align: center;">
-          Please select a Franchise Brand above to view packages.
-        </div>
-      `;
-      updateSummary();
+    if (!clientId || !clientSecret) {
+      alertBox.className = "alert alert-error";
+      alertBox.innerHTML = "Please open <strong>Connected App Config</strong> and save your Consumer Key & Secret.";
+      alertBox.style.display = "block";
+      openSettings();
       return;
     }
 
-    const packages = brandPricing[brand];
-    Object.keys(packages).forEach((typeKey) => {
-      const pkg = packages[typeKey];
-      const card = document.createElement("div");
-      card.className = "package-card";
-      card.id = `pkg-${typeKey.replace(/\s+/g, '')}`;
-      card.onclick = () => selectPackage(typeKey, pkg.price, pkg.tier, card.id);
+    var isFirstValid = validateMandatory(document.getElementById("fanFirstName"));
+    var isLastValid = validateMandatory(document.getElementById("fanLastName"));
+    var isEmailValid = validateMandatory(document.getElementById("fanEmail"));
+    var isBrandValid = validateMandatory(document.getElementById("brandSelect"));
+    var isCardValid = validateMandatory(document.getElementById("cardNumber"));
 
-      card.innerHTML = `
-        <div class="pkg-header">
-          <div class="pkg-name">
-            <input type="radio" name="ticketPkgRadio" class="pkg-radio" id="radio-${typeKey.replace(/\s+/g, '')}">
-            <span>${typeKey}</span>
-            <span class="pkg-tier-tag">${pkg.tier}</span>
-          </div>
-          <div
+    var isPkgValid = true;
+    if (!selectedTicketType) {
+      document.getElementById("err-package").style.display = "block";
+      isPkgValid = false;
+    }
+
+    if (!isFirstValid || !isLastValid || !isEmailValid || !isBrandValid || !isPkgValid || !isCardValid) {
+      alertBox.className = "alert alert-error";
+      alertBox.innerHTML = "Please complete all required customer details and choose a ticket package.";
+      alertBox.style.display = "block";
+      return;
+    }
+
+    var btn = document.getElementById("payBtn");
+    btn.disabled = true;
+    btn.innerText = "Transmitting to Salesforce...";
+
+    var firstName = document.getElementById("fanFirstName").value.trim();
+    var lastName = document.getElementById("fanLastName").value.trim();
+    var email = document.getElementById("fanEmail").value.trim();
+    var brand = getNormalizedBrand();
+    var ticketTypeSnapshot = selectedTicketType;
+    var priceSnapshot = selectedTicketPrice;
+    var tierSnapshot = selectedTargetTier;
+
+    try {
+      var authToken = await getConnectedAppToken(sfUrl, clientId, clientSecret);
+      var headers = {
+        "Authorization": "Bearer " + authToken,
+        "Content-Type": "application/json"
+      };
+
+      var todayStr = new Date().toISOString().split("T")[0];
+
+      // 1. Account
+      var accountRes = await fetch(sfUrl + "/services/data/v60.0/sobjects/Account/", {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({ "Name": firstName + " " + lastName + " Household" })
+      });
+      var accountData = await accountRes.json();
+      if (!accountData.success) throw new Error("Account creation failed: " + JSON.stringify(accountData));
+      var newAccountId = accountData.id;
+
+      // 2. Contact
+      var contactRes = await fetch(sfUrl + "/services/data/v60.0/sobjects/Contact/", {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({
+          "FirstName": firstName,
+          "LastName": lastName,
+          "Email": email,
+          "AccountId": newAccountId
+        })
+      });
+      var contactData = await contactRes.json();
+      if (!contactData.success) throw new Error("Contact creation failed: " + JSON.stringify(contactData));
+      var newContactId = contactData.id;
+
+      // 3. Loyalty Program ID
+      var programId = "0lpau0000004C92AAE";
+      try {
+        var queryUrl = sfUrl + "/services/data/v60.0/query?q=" + encodeURIComponent("SELECT Id FROM LoyaltyProgram WHERE Name = 'MLSE All-Access Loyalty' LIMIT 1");
+        var progQueryRes = await fetch(queryUrl, { method: "GET", headers: headers });
+        var progData = await progQueryRes.json();
+        if (progData.records && progData.records.length > 0) {
+          programId = progData.records[0].Id;
+        }
+      } catch (e) {
+        console.warn("Using fallback Loyalty Program ID", e);
+      }
+
+      // 4. Loyalty Program Member
+      var memberRes = await fetch(sfUrl + "/services/data/v60.0/sobjects/LoyaltyProgramMember/", {
+        method: "POST",
+        headers: headers,
