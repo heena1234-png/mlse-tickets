@@ -9,10 +9,10 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
     :root {
-      --primary: #da291c;             /* Rogers / Raptors Crimson Red */
+      --primary: #da291c;
       --primary-hover: #b81d12;
-      --bg-main: #0a0a0c;             /* Deep Onyx Black */
-      --card-bg: #141418;             /* Rich Dark Charcoal */
+      --bg-main: #0a0a0c;
+      --card-bg: #141418;
       --card-border: #27272f;
       --input-bg: #1b1b22;
       --text-main: #f8fafc;
@@ -27,7 +27,6 @@
     body { background-color: var(--bg-main); color: var(--text-main); margin: 0; padding: 24px 16px; line-height: 1.5; }
     .portal-container { max-width: 1100px; margin: 0 auto; }
 
-    /* Header Nav */
     .header-nav {
       display: flex;
       justify-content: space-between;
@@ -89,7 +88,6 @@
     }
     .config-trigger:hover { color: #fff; border-color: var(--primary); background: #24242e; }
 
-    /* Layout Grid */
     .checkout-grid { display: grid; grid-template-columns: 1.15fr 0.85fr; gap: 24px; }
     @media (max-width: 860px) { .checkout-grid { grid-template-columns: 1fr; } }
 
@@ -126,7 +124,6 @@
       letter-spacing: 0.8px;
     }
 
-    /* Form Fields */
     .form-group { margin-bottom: 16px; }
     label { display: block; font-size: 12px; font-weight: 600; margin-bottom: 6px; color: #cbd5e1; }
     .req { color: var(--primary); font-weight: 700; }
@@ -151,7 +148,6 @@
 
     .row-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
-    /* Interactive Package Cards */
     .package-container { display: flex; flex-direction: column; gap: 10px; margin-top: 6px; }
     .package-card {
       border: 1.5px solid var(--card-border);
@@ -181,7 +177,6 @@
       border: 1px solid rgba(218, 41, 28, 0.4);
     }
 
-    /* Summary Card */
     .summary-card {
       background: #0d0d10;
       border: 1px solid var(--card-border);
@@ -199,7 +194,6 @@
       color: #ffffff;
     }
 
-    /* Checkout Button */
     .checkout-btn {
       width: 100%;
       background: var(--primary);
@@ -215,12 +209,10 @@
     .checkout-btn:hover { background: var(--primary-hover); }
     .checkout-btn:disabled { background: #441818; color: #888; cursor: not-allowed; }
 
-    /* Alert Banners */
     .alert { margin-top: 16px; padding: 16px; border-radius: 8px; font-size: 13px; display: none; line-height: 1.6; }
     .alert-success { background: var(--success-bg); color: #6ee7b7; border: 1px solid #059669; }
     .alert-error { background: var(--error-bg); color: #fca5a5; border: 1px solid #dc2626; }
 
-    /* Modal Backdrop */
     #adminModal {
       display: none;
       position: fixed;
@@ -245,24 +237,21 @@
 <body>
 
 <div class="portal-container">
-  <!-- Brand Header Navigation -->
   <header class="header-nav">
     <div class="brand-container">
       <img src="mlse-logo.png" alt="Rogers x MLSE Logo" class="brand-logo-img" onerror="this.style.display='none'; document.getElementById('logoFallback').style.display='flex';">
       <div id="logoFallback" class="brand-text-fallback" style="display: none;">
-        <span class="rogers-tag">🔴 ROGERS</span> <span>× MLSE</span>
+        <span class="rogers-tag">ROGERS</span> <span>x MLSE</span>
       </div>
       <span class="portal-badge">Tickets & Loyalty</span>
     </div>
     <div class="nav-actions">
-      <button type="button" class="config-trigger" onclick="openSettings()">⚙️ Connected App Config</button>
+      <button type="button" class="config-trigger" onclick="openSettings()">Connected App Config</button>
     </div>
   </header>
 
-  <!-- Guest Checkout Form -->
   <form id="orderForm" autocomplete="off" onsubmit="return false;">
     <div class="checkout-grid">
-      <!-- Left Column: Customer & Matchday Details -->
       <div class="card">
         <div class="hero-banner">
           <h1>Matchday Ticket Gateway</h1>
@@ -294,7 +283,7 @@
 
         <div class="form-group">
           <label>Franchise Brand <span class="req">*</span></label>
-          <select id="brandSelect" onchange="validateMandatory(this); renderPackageCards();">
+          <select id="brandSelect" onchange="handleBrandChange(this)">
             <option value="" disabled selected>-- Select Franchise Brand --</option>
             <option value="Toronto Maple Leafs">Toronto Maple Leafs (NHL)</option>
             <option value="Toronto Raptors">Toronto Raptors (NBA)</option>
@@ -316,7 +305,6 @@
         </div>
       </div>
 
-      <!-- Right Column: Payment & Order Summary -->
       <div class="card">
         <div class="section-title" style="margin-top: 0;">3. Payment Details</div>
 
@@ -346,7 +334,6 @@
           </div>
         </div>
 
-        <!-- Order Summary Card -->
         <div class="summary-card">
           <div class="summary-row">
             <span>Customer:</span>
@@ -378,10 +365,9 @@
   </form>
 </div>
 
-<!-- Modal for Connected App Configuration -->
 <div id="adminModal">
   <div class="modal-box">
-    <h3 style="margin-top: 0; font-size: 18px;">⚙️ Connected App Configuration</h3>
+    <h3 style="margin-top: 0; font-size: 18px;">Connected App Configuration</h3>
     <p style="font-size: 13px; color: #94a3b8;">Credentials used for direct background OAuth token generation.</p>
 
     <div class="form-group">
@@ -512,8 +498,18 @@
   }
 
   function getNormalizedBrand() {
-    const raw = document.getElementById("brandSelect").value || "";
-    return raw.replace(/\s*\([^)]*\)/g, "").trim();
+    const raw = (document.getElementById("brandSelect").value || "").trim();
+    if (raw.includes("Maple Leafs")) return "Toronto Maple Leafs";
+    if (raw.includes("Raptors")) return "Toronto Raptors";
+    if (raw.includes("FC")) return "Toronto FC";
+    if (raw.includes("Argonauts")) return "Toronto Argonauts";
+    if (raw.includes("Live")) return "Live";
+    return raw;
+  }
+
+  function handleBrandChange(elem) {
+    validateMandatory(elem);
+    renderPackageCards();
   }
 
   function renderPackageCards() {
@@ -531,6 +527,7 @@
           Please select a Franchise Brand above to view packages.
         </div>
       `;
+      updateSummary();
       return;
     }
 
@@ -549,226 +546,4 @@
             <span>${typeKey}</span>
             <span class="pkg-tier-tag">${pkg.tier}</span>
           </div>
-          <div class="pkg-price">$${pkg.price.toLocaleString("en-US", {minimumFractionDigits: 2})}</div>
-        </div>
-        <div class="pkg-desc">${pkg.desc}</div>
-      `;
-      container.appendChild(card);
-    });
-    updateSummary();
-  }
-
-  function selectPackage(type, price, tier, cardId) {
-    selectedTicketType = type;
-    selectedTicketPrice = price;
-    selectedTargetTier = tier;
-
-    document.querySelectorAll(".package-card").forEach(c => c.classList.remove("selected"));
-    document.querySelectorAll(".pkg-radio").forEach(r => r.checked = false);
-
-    const activeCard = document.getElementById(cardId);
-    if (activeCard) {
-      activeCard.classList.add("selected");
-      activeCard.querySelector(".pkg-radio").checked = true;
-    }
-    document.getElementById("err-package").style.display = "none";
-    updateSummary();
-  }
-
-  function updateSummary() {
-    const brand = getNormalizedBrand() || "--";
-    const first = document.getElementById("fanFirstName").value.trim();
-    const last = document.getElementById("fanLastName").value.trim();
-
-    document.getElementById("sumCustomer").innerText = (first || last) ? `${first} ${last}` : "--";
-    document.getElementById("sumBrand").innerText = brand;
-    document.getElementById("sumType").innerText = selectedTicketType || "--";
-    document.getElementById("sumTier").innerText = selectedTargetTier ? `${selectedTargetTier}` : "--";
-    document.getElementById("sumAmount").innerText = "$" + selectedTicketPrice.toLocaleString("en-US", {minimumFractionDigits: 2}) + " CAD";
-  }
-
-  function validateMandatory(elem) {
-    const val = (elem.value || "").trim();
-    const isValid = val.length > 0;
-    const errElem = document.getElementById("err-" + elem.id);
-
-    if (!isValid) {
-      elem.classList.add("input-error");
-      if (errElem) errElem.style.display = "block";
-    } else {
-      elem.classList.remove("input-error");
-      if (errElem) errElem.style.display = "none";
-    }
-    updateSummary();
-    return isValid;
-  }
-
-  async function processTicketIngestion() {
-    const alertBox = document.getElementById("statusAlert");
-    alertBox.style.display = "none";
-
-    const sfUrl = localStorage.getItem("sfUrl") || "https://accenture307.my.salesforce.com";
-    const clientId = localStorage.getItem("sfClientId");
-    const clientSecret = localStorage.getItem("sfClientSecret");
-
-    if (!clientId || !clientSecret) {
-      alertBox.className = "alert alert-error";
-      alertBox.innerHTML = "⚠️ Please open <strong>⚙️ Connected App Config</strong> and save your Consumer Key & Secret.";
-      alertBox.style.display = "block";
-      openSettings();
-      return;
-    }
-
-    const isFirstValid = validateMandatory(document.getElementById("fanFirstName"));
-    const isLastValid = validateMandatory(document.getElementById("fanLastName"));
-    const isEmailValid = validateMandatory(document.getElementById("fanEmail"));
-    const isBrandValid = validateMandatory(document.getElementById("brandSelect"));
-    const isCardValid = validateMandatory(document.getElementById("cardNumber"));
-
-    let isPkgValid = true;
-    if (!selectedTicketType) {
-      document.getElementById("err-package").style.display = "block";
-      isPkgValid = false;
-    }
-
-    if (!isFirstValid || !isLastValid || !isEmailValid || !isBrandValid || !isPkgValid || !isCardValid) {
-      alertBox.className = "alert alert-error";
-      alertBox.innerHTML = "⚠️ Please complete all required customer details and choose a ticket package.";
-      alertBox.style.display = "block";
-      return;
-    }
-
-    const btn = document.getElementById("payBtn");
-    btn.disabled = true;
-    btn.innerText = "Transmitting to Salesforce...";
-
-    const firstName = document.getElementById("fanFirstName").value.trim();
-    const lastName = document.getElementById("fanLastName").value.trim();
-    const email = document.getElementById("fanEmail").value.trim();
-    const brand = getNormalizedBrand();
-    const ticketTypeSnapshot = selectedTicketType;
-    const priceSnapshot = selectedTicketPrice;
-    const tierSnapshot = selectedTargetTier;
-
-    try {
-      const authToken = await getConnectedAppToken(sfUrl, clientId, clientSecret);
-      const headers = {
-        "Authorization": `Bearer ${authToken}`,
-        "Content-Type": "application/json"
-      };
-
-      const todayStr = new Date().toISOString().split("T")[0];
-
-      // -------------------------------------------------------------
-      // 1. INSERT ACCOUNT
-      // -------------------------------------------------------------
-      const accountRes = await fetch(`${sfUrl}/services/data/v60.0/sobjects/Account/`, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify({
-          "Name": `${firstName} ${lastName} Household`
-        })
-      });
-      const accountData = await accountRes.json();
-      if (!accountData.success) throw new Error("Account creation failed: " + JSON.stringify(accountData));
-      const newAccountId = accountData.id;
-
-      // -------------------------------------------------------------
-      // 2. INSERT CONTACT (Directly attached to New Account)
-      // -------------------------------------------------------------
-      const contactRes = await fetch(`${sfUrl}/services/data/v60.0/sobjects/Contact/`, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify({
-          "FirstName": firstName,
-          "LastName": lastName,
-          "Email": email,
-          "AccountId": newAccountId
-        })
-      });
-      const contactData = await contactRes.json();
-      if (!contactData.success) throw new Error("Contact creation failed: " + JSON.stringify(contactData));
-      const newContactId = contactData.id;
-
-      // -------------------------------------------------------------
-      // 3. GET LOYALTY PROGRAM ID DYNAMICALLY
-      // -------------------------------------------------------------
-      let programId = "0lpau0000004C92AAE"; // Fallback Program ID
-      try {
-        const queryUrl = `${sfUrl}/services/data/v60.0/query?q=` + encodeURIComponent("SELECT Id FROM LoyaltyProgram WHERE Name = 'MLSE All-Access Loyalty' LIMIT 1");
-        const progQueryRes = await fetch(queryUrl, { method: "GET", headers: headers });
-        const progData = await progQueryRes.json();
-        if (progData.records && progData.records.length > 0) {
-          programId = progData.records[0].Id;
-        }
-      } catch (e) {
-        console.warn("Using fallback Loyalty Program ID", e);
-      }
-
-      // -------------------------------------------------------------
-      // 4. INSERT LOYALTY PROGRAM MEMBER (Linked to Account & Contact)
-      // -------------------------------------------------------------
-      const memberRes = await fetch(`${sfUrl}/services/data/v60.0/sobjects/LoyaltyProgramMember/`, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify({
-          "ProgramId": programId,
-          "AccountId": newAccountId,
-          "ContactId": newContactId,
-          "MemberType": "Individual",
-          "MemberStatus": "Active",
-          "EnrollmentDate": todayStr
-        })
-      });
-      const memberData = await memberRes.json();
-      if (!memberData.success) throw new Error("Loyalty Member creation failed: " + JSON.stringify(memberData));
-      const newMemberId = memberData.id;
-
-      // -------------------------------------------------------------
-      // 5. INSERT TICKET PURCHASE RECORD
-      // -------------------------------------------------------------
-      const ticketRes = await fetch(`${sfUrl}/services/data/v60.0/sobjects/Ticket_Purchase__c/`, {
-        method: "POST",
-        headers: headers,
-        body: JSON.stringify({
-          "Loyalty_Program_Member__c": newMemberId,
-          "Brand__c": brand,
-          "Ticket_Type__c": ticketTypeSnapshot,
-          "Amount__c": priceSnapshot,
-          "Purchase_Date__c": todayStr
-        })
-      });
-      const ticketData = await ticketRes.json();
-      if (!ticketData.success) throw new Error("Ticket record creation failed: " + JSON.stringify(ticketData));
-      const newTicketId = ticketData.id;
-
-      // -------------------------------------------------------------
-      // 6. RENDER SUCCESS ALERT WITH ALL RECORD IDS
-      // -------------------------------------------------------------
-      alertBox.className = "alert alert-success";
-      alertBox.innerHTML = `🎉 <strong>Ticket Ingested via Connected App!</strong><br>
-        • <strong>Customer:</strong> ${firstName} ${lastName} (${email})<br>
-        • <strong>Account ID:</strong> <code>${newAccountId}</code><br>
-        • <strong>Contact ID:</strong> <code>${newContactId}</code><br>
-        • <strong>Loyalty Member ID:</strong> <code>${newMemberId}</code><br>
-        • <strong>Ticket Record ID:</strong> <code>${newTicketId}</code><br>
-        • <strong>Franchise Brand:</strong> ${brand}<br>
-        • <strong>Package:</strong> ${ticketTypeSnapshot} ($${priceSnapshot.toLocaleString("en-US", {minimumFractionDigits: 2})} CAD)<br>
-        • <strong>Loyalty Tier:</strong> Promoted to <strong>${tierSnapshot}</strong>!`;
-      alertBox.style.display = "block";
-
-      resetAllFields();
-
-    } catch (err) {
-      alertBox.className = "alert alert-error";
-      alertBox.innerHTML = `❌ <strong>Ingestion Error:</strong> ${err.message}`;
-      alertBox.style.display = "block";
-    } finally {
-      btn.disabled = false;
-      btn.innerText = "Complete Order & Buy Tickets";
-    }
-  }
-</script>
-
-</body>
-</html>
+          <div
