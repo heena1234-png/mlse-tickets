@@ -511,8 +511,13 @@
     }
   }
 
+  function getNormalizedBrand() {
+    const raw = document.getElementById("brandSelect").value || "";
+    return raw.replace(/\s*\([^)]*\)/g, "").trim();
+  }
+
   function renderPackageCards() {
-    const brand = document.getElementById("brandSelect").value;
+    const brand = getNormalizedBrand();
     const container = document.getElementById("packageContainer");
     container.innerHTML = "";
     selectedTicketType = null;
@@ -520,7 +525,14 @@
     selectedTargetTier = null;
     document.getElementById("err-package").style.display = "none";
 
-    if (!brand || !brandPricing[brand]) return;
+    if (!brand || !brandPricing[brand]) {
+      container.innerHTML = `
+        <div style="font-size: 13px; color: #94a3b8; padding: 14px; border: 1.5px dashed #2e2e38; border-radius: 8px; text-align: center;">
+          Please select a Franchise Brand above to view packages.
+        </div>
+      `;
+      return;
+    }
 
     const packages = brandPricing[brand];
     Object.keys(packages).forEach((typeKey) => {
@@ -537,4 +549,226 @@
             <span>${typeKey}</span>
             <span class="pkg-tier-tag">${pkg.tier}</span>
           </div>
-          <div class="
+          <div class="pkg-price">$${pkg.price.toLocaleString("en-US", {minimumFractionDigits: 2})}</div>
+        </div>
+        <div class="pkg-desc">${pkg.desc}</div>
+      `;
+      container.appendChild(card);
+    });
+    updateSummary();
+  }
+
+  function selectPackage(type, price, tier, cardId) {
+    selectedTicketType = type;
+    selectedTicketPrice = price;
+    selectedTargetTier = tier;
+
+    document.querySelectorAll(".package-card").forEach(c => c.classList.remove("selected"));
+    document.querySelectorAll(".pkg-radio").forEach(r => r.checked = false);
+
+    const activeCard = document.getElementById(cardId);
+    if (activeCard) {
+      activeCard.classList.add("selected");
+      activeCard.querySelector(".pkg-radio").checked = true;
+    }
+    document.getElementById("err-package").style.display = "none";
+    updateSummary();
+  }
+
+  function updateSummary() {
+    const brand = getNormalizedBrand() || "--";
+    const first = document.getElementById("fanFirstName").value.trim();
+    const last = document.getElementById("fanLastName").value.trim();
+
+    document.getElementById("sumCustomer").innerText = (first || last) ? `${first} ${last}` : "--";
+    document.getElementById("sumBrand").innerText = brand;
+    document.getElementById("sumType").innerText = selectedTicketType || "--";
+    document.getElementById("sumTier").innerText = selectedTargetTier ? `${selectedTargetTier}` : "--";
+    document.getElementById("sumAmount").innerText = "$" + selectedTicketPrice.toLocaleString("en-US", {minimumFractionDigits: 2}) + " CAD";
+  }
+
+  function validateMandatory(elem) {
+    const val = (elem.value || "").trim();
+    const isValid = val.length > 0;
+    const errElem = document.getElementById("err-" + elem.id);
+
+    if (!isValid) {
+      elem.classList.add("input-error");
+      if (errElem) errElem.style.display = "block";
+    } else {
+      elem.classList.remove("input-error");
+      if (errElem) errElem.style.display = "none";
+    }
+    updateSummary();
+    return isValid;
+  }
+
+  async function processTicketIngestion() {
+    const alertBox = document.getElementById("statusAlert");
+    alertBox.style.display = "none";
+
+    const sfUrl = localStorage.getItem("sfUrl") || "https://accenture307.my.salesforce.com";
+    const clientId = localStorage.getItem("sfClientId");
+    const clientSecret = localStorage.getItem("sfClientSecret");
+
+    if (!clientId || !clientSecret) {
+      alertBox.className = "alert alert-error";
+      alertBox.innerHTML = "⚠️ Please open <strong>⚙️ Connected App Config</strong> and save your Consumer Key & Secret.";
+      alertBox.style.display = "block";
+      openSettings();
+      return;
+    }
+
+    const isFirstValid = validateMandatory(document.getElementById("fanFirstName"));
+    const isLastValid = validateMandatory(document.getElementById("fanLastName"));
+    const isEmailValid = validateMandatory(document.getElementById("fanEmail"));
+    const isBrandValid = validateMandatory(document.getElementById("brandSelect"));
+    const isCardValid = validateMandatory(document.getElementById("cardNumber"));
+
+    let isPkgValid = true;
+    if (!selectedTicketType) {
+      document.getElementById("err-package").style.display = "block";
+      isPkgValid = false;
+    }
+
+    if (!isFirstValid || !isLastValid || !isEmailValid || !isBrandValid || !isPkgValid || !isCardValid) {
+      alertBox.className = "alert alert-error";
+      alertBox.innerHTML = "⚠️ Please complete all required customer details and choose a ticket package.";
+      alertBox.style.display = "block";
+      return;
+    }
+
+    const btn = document.getElementById("payBtn");
+    btn.disabled = true;
+    btn.innerText = "Transmitting to Salesforce...";
+
+    const firstName = document.getElementById("fanFirstName").value.trim();
+    const lastName = document.getElementById("fanLastName").value.trim();
+    const email = document.getElementById("fanEmail").value.trim();
+    const brand = getNormalizedBrand();
+    const ticketTypeSnapshot = selectedTicketType;
+    const priceSnapshot = selectedTicketPrice;
+    const tierSnapshot = selectedTargetTier;
+
+    try {
+      const authToken = await getConnectedAppToken(sfUrl, clientId, clientSecret);
+      const headers = {
+        "Authorization": `Bearer ${authToken}`,
+        "Content-Type": "application/json"
+      };
+
+      const todayStr = new Date().toISOString().split("T")[0];
+
+      // -------------------------------------------------------------
+      // 1. INSERT ACCOUNT
+      // -------------------------------------------------------------
+      const accountRes = await fetch(`${sfUrl}/services/data/v60.0/sobjects/Account/`, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({
+          "Name": `${firstName} ${lastName} Household`
+        })
+      });
+      const accountData = await accountRes.json();
+      if (!accountData.success) throw new Error("Account creation failed: " + JSON.stringify(accountData));
+      const newAccountId = accountData.id;
+
+      // -------------------------------------------------------------
+      // 2. INSERT CONTACT (Directly attached to New Account)
+      // -------------------------------------------------------------
+      const contactRes = await fetch(`${sfUrl}/services/data/v60.0/sobjects/Contact/`, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({
+          "FirstName": firstName,
+          "LastName": lastName,
+          "Email": email,
+          "AccountId": newAccountId
+        })
+      });
+      const contactData = await contactRes.json();
+      if (!contactData.success) throw new Error("Contact creation failed: " + JSON.stringify(contactData));
+      const newContactId = contactData.id;
+
+      // -------------------------------------------------------------
+      // 3. GET LOYALTY PROGRAM ID DYNAMICALLY
+      // -------------------------------------------------------------
+      let programId = "0lpau0000004C92AAE"; // Fallback Program ID
+      try {
+        const queryUrl = `${sfUrl}/services/data/v60.0/query?q=` + encodeURIComponent("SELECT Id FROM LoyaltyProgram WHERE Name = 'MLSE All-Access Loyalty' LIMIT 1");
+        const progQueryRes = await fetch(queryUrl, { method: "GET", headers: headers });
+        const progData = await progQueryRes.json();
+        if (progData.records && progData.records.length > 0) {
+          programId = progData.records[0].Id;
+        }
+      } catch (e) {
+        console.warn("Using fallback Loyalty Program ID", e);
+      }
+
+      // -------------------------------------------------------------
+      // 4. INSERT LOYALTY PROGRAM MEMBER (Linked to Account & Contact)
+      // -------------------------------------------------------------
+      const memberRes = await fetch(`${sfUrl}/services/data/v60.0/sobjects/LoyaltyProgramMember/`, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({
+          "ProgramId": programId,
+          "AccountId": newAccountId,
+          "ContactId": newContactId,
+          "MemberType": "Individual",
+          "MemberStatus": "Active",
+          "EnrollmentDate": todayStr
+        })
+      });
+      const memberData = await memberRes.json();
+      if (!memberData.success) throw new Error("Loyalty Member creation failed: " + JSON.stringify(memberData));
+      const newMemberId = memberData.id;
+
+      // -------------------------------------------------------------
+      // 5. INSERT TICKET PURCHASE RECORD
+      // -------------------------------------------------------------
+      const ticketRes = await fetch(`${sfUrl}/services/data/v60.0/sobjects/Ticket_Purchase__c/`, {
+        method: "POST",
+        headers: headers,
+        body: JSON.stringify({
+          "Loyalty_Program_Member__c": newMemberId,
+          "Brand__c": brand,
+          "Ticket_Type__c": ticketTypeSnapshot,
+          "Amount__c": priceSnapshot,
+          "Purchase_Date__c": todayStr
+        })
+      });
+      const ticketData = await ticketRes.json();
+      if (!ticketData.success) throw new Error("Ticket record creation failed: " + JSON.stringify(ticketData));
+      const newTicketId = ticketData.id;
+
+      // -------------------------------------------------------------
+      // 6. RENDER SUCCESS ALERT WITH ALL RECORD IDS
+      // -------------------------------------------------------------
+      alertBox.className = "alert alert-success";
+      alertBox.innerHTML = `🎉 <strong>Ticket Ingested via Connected App!</strong><br>
+        • <strong>Customer:</strong> ${firstName} ${lastName} (${email})<br>
+        • <strong>Account ID:</strong> <code>${newAccountId}</code><br>
+        • <strong>Contact ID:</strong> <code>${newContactId}</code><br>
+        • <strong>Loyalty Member ID:</strong> <code>${newMemberId}</code><br>
+        • <strong>Ticket Record ID:</strong> <code>${newTicketId}</code><br>
+        • <strong>Franchise Brand:</strong> ${brand}<br>
+        • <strong>Package:</strong> ${ticketTypeSnapshot} ($${priceSnapshot.toLocaleString("en-US", {minimumFractionDigits: 2})} CAD)<br>
+        • <strong>Loyalty Tier:</strong> Promoted to <strong>${tierSnapshot}</strong>!`;
+      alertBox.style.display = "block";
+
+      resetAllFields();
+
+    } catch (err) {
+      alertBox.className = "alert alert-error";
+      alertBox.innerHTML = `❌ <strong>Ingestion Error:</strong> ${err.message}`;
+      alertBox.style.display = "block";
+    } finally {
+      btn.disabled = false;
+      btn.innerText = "Complete Order & Buy Tickets";
+    }
+  }
+</script>
+
+</body>
+</html>
